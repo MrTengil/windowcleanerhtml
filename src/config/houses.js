@@ -1,0 +1,36 @@
+export const HOUSES = [
+  {
+    id: "brick-town",
+    name: "Brick Town",
+    floors: 5,
+    difficulty: "Low",
+    color: 0xa0522d,
+    enabled: true,
+    dirtTypeIds: ["dust", "bird-poop"],
+    liftId: "gondola",
+  },
+  {
+    id: "glass-towers",
+    name: "Glass Towers",
+    floors: 13,
+    difficulty: "Low",
+    color: 0x4a90d9,
+    enabled: false,
+  },
+  {
+    id: "worn-district",
+    name: "Worn District",
+    floors: 11,
+    difficulty: "Low",
+    color: 0x6b6b6b,
+    enabled: false,
+  },
+  {
+    id: "saints-cathedral",
+    name: "Saint's Cathedral",
+    floors: 12,
+    difficulty: "Low",
+    color: 0x8b7355,
+    enabled: false,
+  },
+];
