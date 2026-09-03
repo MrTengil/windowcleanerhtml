@@ -2,21 +2,26 @@ import { HOUSES } from "../config/houses.js";
 import { DIRT_TYPES } from "../config/dirtTypes.js";
 import { TOOLS } from "../config/tools.js";
 import { LIFTS } from "../config/lifts.js";
-import { DirtSpot } from "../entities/DirtSpot.js";
-import { Window } from "../entities/Window.js";
-import { handleTap } from "../interactions/TapInteraction.js";
-import { SwipeProgress } from "../interactions/SwipeInteraction.js";
-import { scatterPositions } from "../utils/scatterPositions.js";
+import { RevealTracker } from "../interactions/RevealTracker.js";
 import { formatFloorLabel } from "../ui/HUD.js";
 
 const WINDOW_X = 360;
 const WINDOW_Y = 460;
 const WINDOW_WIDTH = 480;
 const WINDOW_HEIGHT = 560;
-const SPOT_SIZE = 70;
-const SPOT_COUNT = 4;
-const SPOT_MIN_SPACING = SPOT_SIZE * 1.2;
-const DISTANCE_PER_HIT = 60;
+const WINDOW_LEFT = WINDOW_X - WINDOW_WIDTH / 2;
+const WINDOW_TOP = WINDOW_Y - WINDOW_HEIGHT / 2;
+
+const WALL_Y = 480;
+const WALL_WIDTH = 640;
+const WALL_HEIGHT = 860;
+
+const DIRT_MASK_COLOR = 0x8a7f6a;
+const BRUSH_RADIUS = 28;
+const ERASE_STEP_DISTANCE = 12;
+const REVEAL_CELL_SIZE = 40;
+const REVEAL_THRESHOLD = 0.9;
+
 const FLOOR_TRANSITION_OFFSET = 150;
 const FLOOR_TRANSITION_DURATION = 350;
 
@@ -33,21 +38,23 @@ export class HouseCleanScene extends Phaser.Scene {
   init(data) {
     this.house = HOUSES.find((house) => house.id === data.houseId);
     this.currentFloor = 1;
-    this.spotViews = [];
     this.isTransitioning = false;
+    this.floorComplete = false;
   }
 
   create() {
     this.equippedTool = this.findEquippedTool();
 
     this.buildSkyBackground();
+    this.buildBuildingWall();
     this.buildHud();
     this.buildToolbelt();
     this.buildLift();
     this.buildWindowPane();
+    this.buildDirtMask();
     this.buildToolIcon();
     this.setupSwipeInput();
-    this.spawnDirtSpots();
+    this.resetFloor();
   }
 
   findEquippedTool() {
@@ -60,6 +67,10 @@ export class HouseCleanScene extends Phaser.Scene {
     const sky = this.add.graphics();
     sky.fillGradientStyle(0x87ceeb, 0x87ceeb, 0x3a5a7a, 0x3a5a7a, 1);
     sky.fillRect(0, 0, 720, 1280);
+  }
+
+  buildBuildingWall() {
+    this.add.rectangle(WINDOW_X, WALL_Y, WALL_WIDTH, WALL_HEIGHT, this.house.color);
   }
 
   buildHud() {
@@ -110,6 +121,15 @@ export class HouseCleanScene extends Phaser.Scene {
     this.floorContainer.add(pane);
   }
 
+  buildDirtMask() {
+    this.dirtMask = this.add
+      .renderTexture(-WINDOW_WIDTH / 2, -WINDOW_HEIGHT / 2, WINDOW_WIDTH, WINDOW_HEIGHT)
+      .setOrigin(0, 0);
+    this.floorContainer.add(this.dirtMask);
+
+    this.eraserBrush = this.add.circle(0, 0, BRUSH_RADIUS, 0xffffff).setVisible(false);
+  }
+
   buildToolIcon() {
     this.toolIcon = this.add
       .rectangle(0, 0, 36, 36, this.equippedTool.color)
@@ -138,22 +158,11 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
-    const distance = Phaser.Math.Distance.Between(
-      pointer.prevPosition.x,
-      pointer.prevPosition.y,
-      pointer.x,
-      pointer.y,
-    );
+    const from = this.toWindowLocal(pointer.prevPosition.x, pointer.prevPosition.y);
+    const to = this.toWindowLocal(pointer.x, pointer.y);
 
-    for (const view of this.spotViews) {
-      if (view.domainSpot.isClean() || !this.pointerOverSpot(pointer, view)) {
-        continue;
-      }
-
-      if (view.swipeProgress.registerDistance(distance)) {
-        this.onSpotHit(view);
-      }
-    }
+    this.eraseAlongPath(from, to);
+    this.updateRevealProgress();
   }
 
   isInsideWindow(pointer) {
@@ -162,65 +171,57 @@ export class HouseCleanScene extends Phaser.Scene {
     );
   }
 
-  pointerOverSpot(pointer, view) {
-    return Math.abs(pointer.x - view.worldX) <= SPOT_SIZE / 2 && Math.abs(pointer.y - view.worldY) <= SPOT_SIZE / 2;
-  }
-
-  spawnDirtSpots() {
-    const positions = scatterPositions({
-      count: SPOT_COUNT,
-      width: WINDOW_WIDTH - SPOT_SIZE,
-      height: WINDOW_HEIGHT - SPOT_SIZE,
-      minSpacing: SPOT_MIN_SPACING,
-    });
-
-    this.spotViews = positions.map((position, index) => this.createDirtSpotView(position, index));
-    this.window = new Window({ dirtSpots: this.spotViews.map((view) => view.domainSpot) });
-
-    this.drawProgressBar(0);
-  }
-
-  createDirtSpotView(position, index) {
-    const dirtTypeId = this.house.dirtTypeIds[index % this.house.dirtTypeIds.length];
-    const dirtType = DIRT_TYPES[dirtTypeId];
-    const domainSpot = new DirtSpot({ hitsToClean: dirtType.hitsToClean });
-
-    const graphic = this.add.rectangle(position.x, position.y, SPOT_SIZE, SPOT_SIZE, dirtType.color);
-    this.floorContainer.add(graphic);
-
+  toWindowLocal(x, y) {
     return {
-      domainSpot,
-      graphic,
-      worldX: WINDOW_X + position.x,
-      worldY: WINDOW_Y + position.y,
-      swipeProgress: new SwipeProgress({ distancePerHit: DISTANCE_PER_HIT }),
+      x: Phaser.Math.Clamp(x - WINDOW_LEFT, 0, WINDOW_WIDTH),
+      y: Phaser.Math.Clamp(y - WINDOW_TOP, 0, WINDOW_HEIGHT),
     };
   }
 
-  onSpotHit(view) {
-    const result = handleTap(view.domainSpot);
+  eraseAlongPath(from, to) {
+    const distance = Phaser.Math.Distance.Between(from.x, from.y, to.x, to.y);
+    const steps = Math.max(1, Math.ceil(distance / ERASE_STEP_DISTANCE));
 
-    if (result.becameClean) {
-      this.tweens.add({
-        targets: view.graphic,
-        scale: 0,
-        alpha: 0,
-        duration: 200,
-        onComplete: () => view.graphic.destroy(),
-      });
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      const x = Phaser.Math.Linear(from.x, to.x, t);
+      const y = Phaser.Math.Linear(from.y, to.y, t);
+
+      this.dirtMask.erase(this.eraserBrush, x, y);
+      this.markRevealedUnderBrush(x, y);
     }
+  }
 
-    this.updateProgress();
+  markRevealedUnderBrush(x, y) {
+    const offsets = [-BRUSH_RADIUS * 0.7, 0, BRUSH_RADIUS * 0.7];
 
-    if (this.window.isClean()) {
+    for (const dx of offsets) {
+      for (const dy of offsets) {
+        this.revealTracker.markRevealedAt(
+          Phaser.Math.Clamp(x + dx, 0, WINDOW_WIDTH),
+          Phaser.Math.Clamp(y + dy, 0, WINDOW_HEIGHT),
+        );
+      }
+    }
+  }
+
+  updateRevealProgress() {
+    this.drawProgressBar(this.revealTracker.revealedFraction());
+
+    if (!this.floorComplete && this.revealTracker.isFullyRevealed(REVEAL_THRESHOLD)) {
+      this.floorComplete = true;
       this.time.delayedCall(300, () => this.advanceFloor());
     }
   }
 
-  updateProgress() {
-    const cleanedCount = this.spotViews.filter((view) => view.domainSpot.isClean()).length;
+  resetFloor() {
+    this.dirtMask.clear();
+    this.dirtMask.fill(DIRT_MASK_COLOR, 1);
 
-    this.drawProgressBar(cleanedCount / this.spotViews.length);
+    this.revealTracker = new RevealTracker({ width: WINDOW_WIDTH, height: WINDOW_HEIGHT, cellSize: REVEAL_CELL_SIZE });
+    this.floorComplete = false;
+
+    this.drawProgressBar(0);
   }
 
   advanceFloor() {
@@ -233,7 +234,7 @@ export class HouseCleanScene extends Phaser.Scene {
 
     this.playFloorTransition(() => {
       this.floorText.setText(formatFloorLabel(this.currentFloor, this.house.floors));
-      this.spawnDirtSpots();
+      this.resetFloor();
     });
   }
 
