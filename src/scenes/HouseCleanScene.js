@@ -242,13 +242,13 @@ export class HouseCleanScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: this.floorContainer,
-      y: WINDOW_Y - FLOOR_TRANSITION_OFFSET,
+      y: WINDOW_Y + FLOOR_TRANSITION_OFFSET,
       alpha: 0,
       duration: FLOOR_TRANSITION_DURATION,
       ease: "Cubic.easeIn",
       onComplete: () => {
         onExitComplete();
-        this.floorContainer.y = WINDOW_Y + FLOOR_TRANSITION_OFFSET;
+        this.floorContainer.y = WINDOW_Y - FLOOR_TRANSITION_OFFSET;
 
         this.tweens.add({
           targets: this.floorContainer,
