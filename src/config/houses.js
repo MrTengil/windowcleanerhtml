@@ -8,6 +8,9 @@ export const HOUSES = [
     enabled: true,
     dirtTypeIds: ["dust", "bird-poop"],
     liftId: "gondola",
+    wallTextureKey: "brick-town-wall",
+    groundTextureKey: "brick-town-ground",
+    roofTextureKey: "brick-town-roof",
   },
   {
     id: "glass-towers",
