@@ -4,6 +4,8 @@ import { TOOLS } from "../config/tools.js";
 import { LIFTS } from "../config/lifts.js";
 import { RevealTracker } from "../interactions/RevealTracker.js";
 import { segmentWorldY, hasScrolledOutOfView } from "../utils/worldScroll.js";
+import { createCloudSpec } from "../utils/cloudSpec.js";
+import { CLOUDS, CLOUD_FIRST_FLOOR } from "../config/clouds.js";
 import { formatFloorLabel } from "../ui/HUD.js";
 
 const CANVAS_WIDTH = 720;
@@ -20,11 +22,18 @@ const WINDOW_TOP = WINDOW_Y - WINDOW_HEIGHT / 2;
 
 const SKY_COLOR = 0x87ceeb;
 const SKYLINE_PARALLAX = 0.25;
+const SKY_DEPTH = -30;
+const SKYLINE_DEPTH = -20;
+const CLOUD_DEPTH = -10;
+const CLOUD_COUNT = 5;
+const CLOUD_BAND_TOP = -60;
+const CLOUD_BAND_BOTTOM = 220;
 
 const WALL_WIDTH = 640;
 const GROUND_HEIGHT = 300;
 const GROUND_Y = CANVAS_HEIGHT - GROUND_HEIGHT / 2;
 const ROOF_Y = 200;
+const ROOF_HEIGHT = 104;
 const LIFT_Y = 1000;
 
 const DIRT_MASK_COLOR = 0x8a7f6a;
@@ -54,6 +63,7 @@ export class HouseCleanScene extends Phaser.Scene {
     this.floorComplete = false;
     this.scroll = { offset: 0 };
     this.segments = [];
+    this.clouds = [];
   }
 
   create() {
@@ -73,13 +83,80 @@ export class HouseCleanScene extends Phaser.Scene {
     this.resetFloor();
   }
 
-  update() {
+  update(time, delta) {
     for (const segment of this.segments) {
       segment.container.y = segment.worldY + this.scroll.offset;
     }
 
-    this.wall.tilePositionY = -this.scroll.offset;
+    this.updateWall();
     this.skyline.y = this.skylineBaseY + this.scroll.offset * SKYLINE_PARALLAX;
+
+    this.driftClouds(delta);
+  }
+
+  updateWall() {
+    const wallTop = this.roofLineY();
+    const wallHeight = CANVAS_HEIGHT - wallTop;
+
+    if (this.wall.height !== wallHeight) {
+      this.wall.setSize(WALL_WIDTH, wallHeight);
+    }
+
+    this.wall.y = wallTop + wallHeight / 2;
+    // Keep the brick phase locked to world space as the wall's top edge moves.
+    this.wall.tilePositionY = wallTop - this.scroll.offset;
+  }
+
+  roofLineY() {
+    const topSegment = this.segments.find((segment) => segment.floor === this.house.floors);
+
+    if (!topSegment) {
+      return 0;
+    }
+
+    const roofBottom = topSegment.container.y + (ROOF_Y - WINDOW_Y) + ROOF_HEIGHT / 2;
+
+    return Phaser.Math.Clamp(roofBottom, 0, CANVAS_HEIGHT);
+  }
+
+  driftClouds(delta) {
+    for (const cloud of this.clouds) {
+      const halfWidth = cloud.image.displayWidth / 2;
+
+      cloud.image.x += cloud.driftSpeed * (delta / 1000);
+      cloud.image.y = cloud.worldY + this.scroll.offset * cloud.parallax;
+
+      if (cloud.driftSpeed > 0 && cloud.image.x - halfWidth > CANVAS_WIDTH) {
+        cloud.image.x = -halfWidth;
+      } else if (cloud.driftSpeed < 0 && cloud.image.x + halfWidth < 0) {
+        cloud.image.x = CANVAS_WIDTH + halfWidth;
+      }
+
+      if (cloud.image.y - cloud.image.displayHeight / 2 > CANVAS_HEIGHT) {
+        cloud.worldY = CLOUD_BAND_TOP - this.scroll.offset * cloud.parallax;
+      }
+    }
+  }
+
+  spawnClouds() {
+    const random = () => Math.random();
+
+    for (let i = 0; i < CLOUD_COUNT; i++) {
+      const spec = createCloudSpec({ clouds: CLOUDS, random });
+      const screenY = Phaser.Math.Linear(CLOUD_BAND_TOP, CLOUD_BAND_BOTTOM, Math.random());
+      const image = this.add
+        .image(Math.random() * CANVAS_WIDTH, screenY, spec.textureKey)
+        .setScale(spec.scale)
+        .setAlpha(spec.alpha)
+        .setDepth(CLOUD_DEPTH);
+
+      this.clouds.push({
+        image,
+        driftSpeed: spec.driftSpeed,
+        parallax: spec.parallax,
+        worldY: screenY - this.scroll.offset * spec.parallax,
+      });
+    }
   }
 
   findEquippedTool() {
@@ -89,9 +166,12 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildSkyBackground() {
-    this.add.rectangle(BUILDING_X, CANVAS_HEIGHT / 2, CANVAS_WIDTH, CANVAS_HEIGHT, SKY_COLOR);
+    this.add.rectangle(BUILDING_X, CANVAS_HEIGHT / 2, CANVAS_WIDTH, CANVAS_HEIGHT, SKY_COLOR).setDepth(SKY_DEPTH);
 
-    this.skyline = this.add.image(BUILDING_X, 0, this.house.skylineTextureKey).setOrigin(0.5, 0);
+    this.skyline = this.add
+      .image(BUILDING_X, 0, this.house.skylineTextureKey)
+      .setOrigin(0.5, 0)
+      .setDepth(SKYLINE_DEPTH);
     this.skylineBaseY = -this.skylineParallaxTravel();
     this.skyline.setDisplaySize(CANVAS_WIDTH, CANVAS_HEIGHT + this.skylineParallaxTravel());
     this.skyline.y = this.skylineBaseY;
@@ -184,7 +264,7 @@ export class HouseCleanScene extends Phaser.Scene {
       container.add(this.add.image(0, ROOF_Y - WINDOW_Y, this.house.roofTextureKey));
     }
 
-    this.segments.push({ container, worldY });
+    this.segments.push({ container, worldY, floor: this.currentFloor });
     this.dirtMask = dirtMask;
   }
 
@@ -312,6 +392,11 @@ export class HouseCleanScene extends Phaser.Scene {
       ease: "Cubic.easeInOut",
       onComplete: () => {
         this.cullScrolledSegments();
+
+        if (this.currentFloor > CLOUD_FIRST_FLOOR && this.clouds.length === 0) {
+          this.spawnClouds();
+        }
+
         this.isTransitioning = false;
       },
     });
