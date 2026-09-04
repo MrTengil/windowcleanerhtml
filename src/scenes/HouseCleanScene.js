@@ -25,6 +25,7 @@ const SKYLINE_PARALLAX = 0.25;
 const SKY_DEPTH = -30;
 const SKYLINE_DEPTH = -20;
 const CLOUD_DEPTH = -10;
+const LIFT_DEPTH = 10;
 const CLOUD_COUNT = 5;
 const CLOUD_BAND_TOP = -60;
 const CLOUD_BAND_BOTTOM = 220;
@@ -257,7 +258,7 @@ export class HouseCleanScene extends Phaser.Scene {
   buildLift() {
     const lift = LIFTS.find((candidate) => candidate.id === this.house.liftId);
 
-    this.add.rectangle(BUILDING_X, LIFT_Y, 600, 40, lift.color);
+    this.add.rectangle(BUILDING_X, LIFT_Y, 600, 40, lift.color).setDepth(LIFT_DEPTH);
   }
 
   spawnFloorSegment(floor) {
