@@ -3,6 +3,13 @@ export class BootScene extends Phaser.Scene {
     super("BootScene");
   }
 
+  preload() {
+    this.load.image("brick-town-wall", "assets/images/brick-town/brick_floor_tile.svg");
+    this.load.image("brick-town-ground", "assets/images/brick-town/sidewalk_ground.svg");
+    this.load.image("brick-town-roof", "assets/images/brick-town/brick_roof.svg");
+    this.load.image("squeegee", "assets/images/tools/squeegee.svg");
+  }
+
   create() {
     this.scene.start("MainMenuScene");
   }
