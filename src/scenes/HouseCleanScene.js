@@ -81,6 +81,7 @@ export class HouseCleanScene extends Phaser.Scene {
 
     this.buildEraserBrush();
     this.buildToolIcon();
+    this.buildDebugSkipButton();
     this.setupSwipeInput();
     this.activateSegment(firstFloor);
   }
@@ -231,6 +232,26 @@ export class HouseCleanScene extends Phaser.Scene {
     this.progressBarGraphics.fillRect(PROGRESS_BAR_X, PROGRESS_BAR_Y, PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT);
     this.progressBarGraphics.fillStyle(0x4caf50, 1);
     this.progressBarGraphics.fillRect(PROGRESS_BAR_X, PROGRESS_BAR_Y, PROGRESS_BAR_WIDTH * fraction, PROGRESS_BAR_HEIGHT);
+  }
+
+  buildDebugSkipButton() {
+    const button = this.add
+      .rectangle(40, 100, 80, 36, 0x555555)
+      .setStrokeStyle(2, 0xffffff, 0.6)
+      .setInteractive({ useHandCursor: true })
+      .setDepth(HUD_DEPTH);
+
+    this.add.text(40, 100, "Skip", { fontSize: "14px", color: "#ffffff" }).setOrigin(0.5).setDepth(HUD_DEPTH);
+
+    button.on("pointerdown", () => this.debugSkipFloor());
+  }
+
+  debugSkipFloor() {
+    if (this.isTransitioning || this.currentFloor > this.house.floors) {
+      return;
+    }
+
+    this.advanceFloor();
   }
 
   buildLift() {
