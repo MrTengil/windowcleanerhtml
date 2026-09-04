@@ -12,14 +12,14 @@ const WINDOW_HEIGHT = 560;
 const WINDOW_LEFT = WINDOW_X - WINDOW_WIDTH / 2;
 const WINDOW_TOP = WINDOW_Y - WINDOW_HEIGHT / 2;
 
-const WALL_WIDTH = 720;
+const SKY_COLOR = 0x87ceeb;
+
+const WALL_WIDTH = 640;
 const WALL_HEIGHT = 1280;
-const GROUND_STRIP_HEIGHT = 160;
-const GROUND_COLOR = 0x4a3f35;
-const GROUND_STRIP_Y = WALL_HEIGHT - GROUND_STRIP_HEIGHT / 2;
-const ROOF_STRIP_HEIGHT = 120;
-const ROOF_SKY_COLOR = 0x87ceeb;
-const ROOF_SKY_Y = ROOF_STRIP_HEIGHT / 2;
+const GROUND_HEIGHT = 300;
+const GROUND_Y = WALL_HEIGHT - GROUND_HEIGHT / 2;
+const ROOF_HEIGHT = 104;
+const ROOF_Y = ROOF_HEIGHT / 2;
 
 const DIRT_MASK_COLOR = 0x8a7f6a;
 const BRUSH_RADIUS = 100;
@@ -50,9 +50,10 @@ export class HouseCleanScene extends Phaser.Scene {
   create() {
     this.equippedTool = this.findEquippedTool();
 
+    this.buildSkyBackground();
     this.buildBuildingWall();
-    this.buildRoofSky();
-    this.buildGroundStrip();
+    this.buildRoof();
+    this.buildGround();
     this.buildHud();
     this.buildToolbelt();
     this.buildLift();
@@ -73,21 +74,25 @@ export class HouseCleanScene extends Phaser.Scene {
     return TOOLS.find((tool) => tool.id === firstDirtType.toolId);
   }
 
+  buildSkyBackground() {
+    this.add.rectangle(WINDOW_X, WALL_HEIGHT / 2, 720, WALL_HEIGHT, SKY_COLOR);
+  }
+
   buildBuildingWall() {
-    this.add.rectangle(WALL_WIDTH / 2, WALL_HEIGHT / 2, WALL_WIDTH, WALL_HEIGHT, this.house.color);
+    this.add.tileSprite(WINDOW_X, WALL_HEIGHT / 2, WALL_WIDTH, WALL_HEIGHT, this.house.wallTextureKey);
   }
 
-  buildRoofSky() {
-    this.roofSky = this.add.rectangle(WALL_WIDTH / 2, ROOF_SKY_Y, WALL_WIDTH, ROOF_STRIP_HEIGHT, ROOF_SKY_COLOR);
+  buildRoof() {
+    this.roof = this.add.image(WINDOW_X, ROOF_Y, this.house.roofTextureKey);
   }
 
-  buildGroundStrip() {
-    this.groundStrip = this.add.rectangle(WALL_WIDTH / 2, GROUND_STRIP_Y, WALL_WIDTH, GROUND_STRIP_HEIGHT, GROUND_COLOR);
+  buildGround() {
+    this.ground = this.add.image(WINDOW_X, GROUND_Y, this.house.groundTextureKey);
   }
 
   updateBuildingState() {
-    this.groundStrip.setVisible(this.currentFloor === 1);
-    this.roofSky.setVisible(this.currentFloor === this.house.floors);
+    this.ground.setVisible(this.currentFloor === 1);
+    this.roof.setVisible(this.currentFloor === this.house.floors);
   }
 
   buildHud() {
@@ -106,12 +111,24 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildToolbelt() {
-    this.add
-      .rectangle(680, 40, 50, 50, this.equippedTool.color)
-      .setStrokeStyle(3, 0xffffff, 0.9);
+    this.createToolIcon(680, 40, 50, { withBorder: true });
     this.add
       .text(680, 70, this.equippedTool.name, { fontSize: "12px", color: "#ffffff", align: "center" })
       .setOrigin(0.5, 0);
+  }
+
+  createToolIcon(x, y, size, { withBorder }) {
+    if (this.equippedTool.iconTextureKey) {
+      return this.add.image(x, y, this.equippedTool.iconTextureKey).setDisplaySize(size, size);
+    }
+
+    const rectangle = this.add.rectangle(x, y, size, size, this.equippedTool.color);
+
+    if (withBorder) {
+      rectangle.setStrokeStyle(3, 0xffffff, 0.9);
+    }
+
+    return rectangle;
   }
 
   drawProgressBar(fraction) {
@@ -149,10 +166,7 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildToolIcon() {
-    this.toolIcon = this.add
-      .rectangle(0, 0, 36, 36, this.equippedTool.color)
-      .setVisible(false)
-      .setDepth(1000);
+    this.toolIcon = this.createToolIcon(0, 0, 36, { withBorder: false }).setVisible(false).setDepth(1000);
 
     this.tweens.add({ targets: this.toolIcon, scale: 1.2, yoyo: true, repeat: -1, duration: 220 });
   }
@@ -275,11 +289,11 @@ export class HouseCleanScene extends Phaser.Scene {
 
     if (wasGroundFloor) {
       this.tweens.add({
-        targets: this.groundStrip,
-        y: GROUND_STRIP_Y + FLOOR_TRANSITION_OFFSET,
+        targets: this.ground,
+        y: GROUND_Y + FLOOR_TRANSITION_OFFSET,
         duration: FLOOR_TRANSITION_DURATION,
         ease: "Cubic.easeInOut",
-        onComplete: () => this.groundStrip.setVisible(false),
+        onComplete: () => this.ground.setVisible(false),
       });
     }
 
@@ -289,12 +303,12 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   playRoofEntrance() {
-    this.roofSky.setPosition(WALL_WIDTH / 2, ROOF_SKY_Y - FLOOR_TRANSITION_OFFSET);
-    this.roofSky.setVisible(true);
+    this.roof.setPosition(WINDOW_X, ROOF_Y - FLOOR_TRANSITION_OFFSET);
+    this.roof.setVisible(true);
 
     this.tweens.add({
-      targets: this.roofSky,
-      y: ROOF_SKY_Y,
+      targets: this.roof,
+      y: ROOF_Y,
       duration: FLOOR_TRANSITION_DURATION,
       ease: "Cubic.easeInOut",
     });
