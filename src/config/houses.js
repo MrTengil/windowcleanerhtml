@@ -11,6 +11,7 @@ export const HOUSES = [
     wallTextureKey: "brick-town-wall",
     groundTextureKey: "brick-town-ground",
     roofTextureKey: "brick-town-roof",
+    skylineTextureKey: "brick-town-skyline",
   },
   {
     id: "glass-towers",

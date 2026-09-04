@@ -19,6 +19,7 @@ const WINDOW_LEFT = WINDOW_CENTER_X - WINDOW_WIDTH / 2;
 const WINDOW_TOP = WINDOW_Y - WINDOW_HEIGHT / 2;
 
 const SKY_COLOR = 0x87ceeb;
+const SKYLINE_PARALLAX = 0.25;
 
 const WALL_WIDTH = 640;
 const GROUND_HEIGHT = 300;
@@ -78,6 +79,7 @@ export class HouseCleanScene extends Phaser.Scene {
     }
 
     this.wall.tilePositionY = -this.scroll.offset;
+    this.skyline.y = this.skylineBaseY + this.scroll.offset * SKYLINE_PARALLAX;
   }
 
   findEquippedTool() {
@@ -88,6 +90,15 @@ export class HouseCleanScene extends Phaser.Scene {
 
   buildSkyBackground() {
     this.add.rectangle(BUILDING_X, CANVAS_HEIGHT / 2, CANVAS_WIDTH, CANVAS_HEIGHT, SKY_COLOR);
+
+    this.skyline = this.add.image(BUILDING_X, 0, this.house.skylineTextureKey).setOrigin(0.5, 0);
+    this.skylineBaseY = -this.skylineParallaxTravel();
+    this.skyline.setDisplaySize(CANVAS_WIDTH, CANVAS_HEIGHT + this.skylineParallaxTravel());
+    this.skyline.y = this.skylineBaseY;
+  }
+
+  skylineParallaxTravel() {
+    return (this.house.floors - 1) * SEGMENT_SPACING * SKYLINE_PARALLAX;
   }
 
   buildBuildingWall() {
