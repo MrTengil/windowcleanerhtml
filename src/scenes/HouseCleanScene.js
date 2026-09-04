@@ -16,8 +16,10 @@ const WALL_WIDTH = 720;
 const WALL_HEIGHT = 1280;
 const GROUND_STRIP_HEIGHT = 160;
 const GROUND_COLOR = 0x4a3f35;
+const GROUND_STRIP_Y = WALL_HEIGHT - GROUND_STRIP_HEIGHT / 2;
 const ROOF_STRIP_HEIGHT = 120;
 const ROOF_SKY_COLOR = 0x87ceeb;
+const ROOF_SKY_Y = ROOF_STRIP_HEIGHT / 2;
 
 const DIRT_MASK_COLOR = 0x8a7f6a;
 const BRUSH_RADIUS = 100;
@@ -72,17 +74,11 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildRoofSky() {
-    this.roofSky = this.add.rectangle(WALL_WIDTH / 2, ROOF_STRIP_HEIGHT / 2, WALL_WIDTH, ROOF_STRIP_HEIGHT, ROOF_SKY_COLOR);
+    this.roofSky = this.add.rectangle(WALL_WIDTH / 2, ROOF_SKY_Y, WALL_WIDTH, ROOF_STRIP_HEIGHT, ROOF_SKY_COLOR);
   }
 
   buildGroundStrip() {
-    this.groundStrip = this.add.rectangle(
-      WALL_WIDTH / 2,
-      WALL_HEIGHT - GROUND_STRIP_HEIGHT / 2,
-      WALL_WIDTH,
-      GROUND_STRIP_HEIGHT,
-      GROUND_COLOR,
-    );
+    this.groundStrip = this.add.rectangle(WALL_WIDTH / 2, GROUND_STRIP_Y, WALL_WIDTH, GROUND_STRIP_HEIGHT, GROUND_COLOR);
   }
 
   updateBuildingState() {
@@ -230,6 +226,8 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   advanceFloor() {
+    const wasGroundFloor = this.currentFloor === 1;
+
     this.currentFloor += 1;
 
     if (this.currentFloor > this.house.floors) {
@@ -237,13 +235,15 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
-    this.playFloorTransition(() => {
+    const arrivingAtRoofFloor = this.currentFloor === this.house.floors;
+
+    this.playFloorTransition({ wasGroundFloor, arrivingAtRoofFloor }, () => {
       this.floorText.setText(formatFloorLabel(this.currentFloor, this.house.floors));
       this.resetFloor();
     });
   }
 
-  playFloorTransition(onExitComplete) {
+  playFloorTransition({ wasGroundFloor, arrivingAtRoofFloor }, onExitComplete) {
     this.isTransitioning = true;
 
     this.tweens.add({
@@ -266,7 +266,35 @@ export class HouseCleanScene extends Phaser.Scene {
             this.isTransitioning = false;
           },
         });
+
+        if (arrivingAtRoofFloor) {
+          this.playRoofEntrance();
+        }
       },
+    });
+
+    if (wasGroundFloor) {
+      this.tweens.add({
+        targets: this.groundStrip,
+        y: GROUND_STRIP_Y + FLOOR_TRANSITION_OFFSET,
+        alpha: 0,
+        duration: FLOOR_TRANSITION_DURATION,
+        ease: "Cubic.easeIn",
+      });
+    }
+  }
+
+  playRoofEntrance() {
+    this.roofSky.setPosition(WALL_WIDTH / 2, ROOF_SKY_Y - FLOOR_TRANSITION_OFFSET);
+    this.roofSky.setAlpha(0);
+    this.roofSky.setVisible(true);
+
+    this.tweens.add({
+      targets: this.roofSky,
+      y: ROOF_SKY_Y,
+      alpha: 1,
+      duration: FLOOR_TRANSITION_DURATION,
+      ease: "Cubic.easeOut",
     });
   }
 
