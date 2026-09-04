@@ -5,7 +5,7 @@ import { LIFTS } from "../config/lifts.js";
 const CARD_WIDTH = 300;
 const CARD_HEIGHT = 220;
 const CARD_GAP = 20;
-const GRID_TOP = 160;
+const GRID_TOP = 260;
 const GRID_CENTER_X = 360;
 
 export class MainMenuScene extends Phaser.Scene {
@@ -15,7 +15,7 @@ export class MainMenuScene extends Phaser.Scene {
 
   create() {
     this.add
-      .text(GRID_CENTER_X, 70, "Vertical Shine", {
+      .text(GRID_CENTER_X, 140, "Vertical Shine", {
         fontSize: "48px",
         color: "#ffffff",
       })
@@ -25,13 +25,13 @@ export class MainMenuScene extends Phaser.Scene {
 
     this.createIconRow({
       title: "Toolbelt",
-      y: 660,
+      y: 840,
       items: TOOLS,
     });
 
     this.createIconRow({
       title: "Lift Garage",
-      y: 840,
+      y: 1120,
       items: LIFTS,
     });
   }

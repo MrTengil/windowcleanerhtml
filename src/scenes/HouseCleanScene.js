@@ -6,21 +6,24 @@ import { RevealTracker } from "../interactions/RevealTracker.js";
 import { segmentWorldY, hasScrolledOutOfView } from "../utils/worldScroll.js";
 import { formatFloorLabel } from "../ui/HUD.js";
 
-const WINDOW_X = 360;
-const WINDOW_Y = 460;
+const CANVAS_WIDTH = 720;
+const CANVAS_HEIGHT = 1560;
+
+const BUILDING_X = CANVAS_WIDTH / 2;
+const WINDOW_Y = 560;
 const WINDOW_WIDTH = 480;
 const WINDOW_HEIGHT = 560;
-const WINDOW_LEFT = WINDOW_X - WINDOW_WIDTH / 2;
+const WINDOW_CENTER_X = BUILDING_X;
+const WINDOW_LEFT = WINDOW_CENTER_X - WINDOW_WIDTH / 2;
 const WINDOW_TOP = WINDOW_Y - WINDOW_HEIGHT / 2;
 
 const SKY_COLOR = 0x87ceeb;
 
 const WALL_WIDTH = 640;
-const WALL_HEIGHT = 1280;
 const GROUND_HEIGHT = 300;
-const GROUND_Y = WALL_HEIGHT - GROUND_HEIGHT / 2;
-const ROOF_HEIGHT = 104;
-const ROOF_Y = ROOF_HEIGHT / 2;
+const GROUND_Y = CANVAS_HEIGHT - GROUND_HEIGHT / 2;
+const ROOF_Y = 200;
+const LIFT_Y = 1000;
 
 const DIRT_MASK_COLOR = 0x8a7f6a;
 const BRUSH_RADIUS = 100;
@@ -83,11 +86,11 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildSkyBackground() {
-    this.add.rectangle(WINDOW_X, WALL_HEIGHT / 2, 720, WALL_HEIGHT, SKY_COLOR);
+    this.add.rectangle(BUILDING_X, CANVAS_HEIGHT / 2, CANVAS_WIDTH, CANVAS_HEIGHT, SKY_COLOR);
   }
 
   buildBuildingWall() {
-    this.wall = this.add.tileSprite(WINDOW_X, WALL_HEIGHT / 2, WALL_WIDTH, WALL_HEIGHT, this.house.wallTextureKey);
+    this.wall = this.add.tileSprite(BUILDING_X, CANVAS_HEIGHT / 2, WALL_WIDTH, CANVAS_HEIGHT, this.house.wallTextureKey);
   }
 
   buildHud() {
@@ -137,7 +140,7 @@ export class HouseCleanScene extends Phaser.Scene {
   buildLift() {
     const lift = LIFTS.find((candidate) => candidate.id === this.house.liftId);
 
-    this.add.rectangle(360, 880, 600, 40, lift.color);
+    this.add.rectangle(BUILDING_X, LIFT_Y, 600, 40, lift.color);
   }
 
   spawnFloorSegment() {
@@ -146,7 +149,7 @@ export class HouseCleanScene extends Phaser.Scene {
       restingY: WINDOW_Y,
       spacing: SEGMENT_SPACING,
     });
-    const container = this.add.container(WINDOW_X, worldY + this.scroll.offset);
+    const container = this.add.container(BUILDING_X, worldY + this.scroll.offset);
 
     const pane = this.add
       .rectangle(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0x9fd3e8)
@@ -175,7 +178,7 @@ export class HouseCleanScene extends Phaser.Scene {
       const outOfView = hasScrolledOutOfView({
         worldY: segment.worldY,
         offset: this.scroll.offset,
-        canvasHeight: WALL_HEIGHT,
+        canvasHeight: CANVAS_HEIGHT,
         spacing: SEGMENT_SPACING,
       });
 
@@ -225,7 +228,7 @@ export class HouseCleanScene extends Phaser.Scene {
 
   isInsideWindow(pointer) {
     return (
-      Math.abs(pointer.x - WINDOW_X) <= WINDOW_WIDTH / 2 && Math.abs(pointer.y - WINDOW_Y) <= WINDOW_HEIGHT / 2
+      Math.abs(pointer.x - WINDOW_CENTER_X) <= WINDOW_WIDTH / 2 && Math.abs(pointer.y - WINDOW_Y) <= WINDOW_HEIGHT / 2
     );
   }
 
@@ -300,7 +303,7 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   showLevelComplete() {
-    this.add.rectangle(360, 640, 720, 1280, 0x000000, 0.7);
+    this.add.rectangle(BUILDING_X, CANVAS_HEIGHT / 2, CANVAS_WIDTH, CANVAS_HEIGHT, 0x000000, 0.7);
     this.add
       .text(360, 580, "Level Complete", { fontSize: "40px", color: "#ffffff" })
       .setOrigin(0.5);
