@@ -12,9 +12,12 @@ const WINDOW_HEIGHT = 560;
 const WINDOW_LEFT = WINDOW_X - WINDOW_WIDTH / 2;
 const WINDOW_TOP = WINDOW_Y - WINDOW_HEIGHT / 2;
 
-const WALL_Y = 480;
-const WALL_WIDTH = 640;
-const WALL_HEIGHT = 860;
+const WALL_WIDTH = 720;
+const WALL_HEIGHT = 1280;
+const GROUND_STRIP_HEIGHT = 160;
+const GROUND_COLOR = 0x4a3f35;
+const ROOF_STRIP_HEIGHT = 120;
+const ROOF_SKY_COLOR = 0x87ceeb;
 
 const DIRT_MASK_COLOR = 0x8a7f6a;
 const BRUSH_RADIUS = 28;
@@ -45,8 +48,9 @@ export class HouseCleanScene extends Phaser.Scene {
   create() {
     this.equippedTool = this.findEquippedTool();
 
-    this.buildSkyBackground();
     this.buildBuildingWall();
+    this.buildRoofSky();
+    this.buildGroundStrip();
     this.buildHud();
     this.buildToolbelt();
     this.buildLift();
@@ -63,14 +67,27 @@ export class HouseCleanScene extends Phaser.Scene {
     return TOOLS.find((tool) => tool.id === firstDirtType.toolId);
   }
 
-  buildSkyBackground() {
-    const sky = this.add.graphics();
-    sky.fillGradientStyle(0x87ceeb, 0x87ceeb, 0x3a5a7a, 0x3a5a7a, 1);
-    sky.fillRect(0, 0, 720, 1280);
+  buildBuildingWall() {
+    this.add.rectangle(WALL_WIDTH / 2, WALL_HEIGHT / 2, WALL_WIDTH, WALL_HEIGHT, this.house.color);
   }
 
-  buildBuildingWall() {
-    this.add.rectangle(WINDOW_X, WALL_Y, WALL_WIDTH, WALL_HEIGHT, this.house.color);
+  buildRoofSky() {
+    this.roofSky = this.add.rectangle(WALL_WIDTH / 2, ROOF_STRIP_HEIGHT / 2, WALL_WIDTH, ROOF_STRIP_HEIGHT, ROOF_SKY_COLOR);
+  }
+
+  buildGroundStrip() {
+    this.groundStrip = this.add.rectangle(
+      WALL_WIDTH / 2,
+      WALL_HEIGHT - GROUND_STRIP_HEIGHT / 2,
+      WALL_WIDTH,
+      GROUND_STRIP_HEIGHT,
+      GROUND_COLOR,
+    );
+  }
+
+  updateBuildingState() {
+    this.groundStrip.setVisible(this.currentFloor === 1);
+    this.roofSky.setVisible(this.currentFloor === this.house.floors);
   }
 
   buildHud() {
@@ -209,6 +226,7 @@ export class HouseCleanScene extends Phaser.Scene {
     this.floorComplete = false;
 
     this.drawProgressBar(0);
+    this.updateBuildingState();
   }
 
   advanceFloor() {
