@@ -11,9 +11,10 @@ const CANVAS_HEIGHT = 1560;
 
 const BUILDING_X = CANVAS_WIDTH / 2;
 const WINDOW_Y = 560;
-const WINDOW_WIDTH = 480;
-const WINDOW_HEIGHT = 560;
-const WINDOW_CENTER_X = BUILDING_X;
+const WINDOW_WIDTH = 420;
+const WINDOW_HEIGHT = 520;
+const WINDOW_OFFSET_X = 30;
+const WINDOW_CENTER_X = BUILDING_X + WINDOW_OFFSET_X;
 const WINDOW_LEFT = WINDOW_CENTER_X - WINDOW_WIDTH / 2;
 const WINDOW_TOP = WINDOW_Y - WINDOW_HEIGHT / 2;
 
@@ -152,12 +153,12 @@ export class HouseCleanScene extends Phaser.Scene {
     const container = this.add.container(BUILDING_X, worldY + this.scroll.offset);
 
     const pane = this.add
-      .rectangle(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0x9fd3e8)
+      .rectangle(WINDOW_OFFSET_X, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0x9fd3e8)
       .setStrokeStyle(4, 0xffffff, 0.8);
     container.add(pane);
 
     const dirtMask = this.add
-      .renderTexture(-WINDOW_WIDTH / 2, -WINDOW_HEIGHT / 2, WINDOW_WIDTH, WINDOW_HEIGHT)
+      .renderTexture(WINDOW_OFFSET_X - WINDOW_WIDTH / 2, -WINDOW_HEIGHT / 2, WINDOW_WIDTH, WINDOW_HEIGHT)
       .setOrigin(0, 0);
     container.add(dirtMask);
 
