@@ -8,6 +8,8 @@ const CARD_GAP = 20;
 const GRID_TOP = 260;
 const GRID_CENTER_X = 360;
 
+const DEFAULT_LIFT_ID = "gondola";
+
 export class MainMenuScene extends Phaser.Scene {
   constructor() {
     super("MainMenuScene");
@@ -29,10 +31,59 @@ export class MainMenuScene extends Phaser.Scene {
       items: TOOLS,
     });
 
-    this.createIconRow({
-      title: "Lift Garage",
-      y: 1120,
-      items: LIFTS,
+    this.createLiftGarage({ y: 1120 });
+  }
+
+  createLiftGarage({ y }) {
+    if (!this.registry.has("selectedLiftId")) {
+      this.registry.set("selectedLiftId", DEFAULT_LIFT_ID);
+    }
+
+    this.add
+      .text(GRID_CENTER_X, y, "Lift Garage", { fontSize: "24px", color: "#ffffff" })
+      .setOrigin(0.5);
+
+    const iconSize = 64;
+    const gap = 30;
+    const totalWidth = LIFTS.length * iconSize + (LIFTS.length - 1) * gap;
+    const startX = GRID_CENTER_X - totalWidth / 2 + iconSize / 2;
+    const iconY = y + 50;
+
+    this.liftSelectionBorders = {};
+
+    LIFTS.forEach((lift, index) => {
+      const x = startX + index * (iconSize + gap);
+      const selectable = Boolean(lift.platformTextureKey);
+
+      const icon = this.createItemIcon(lift, x, iconY, iconSize, { dimmed: !selectable });
+
+      const border = this.add.rectangle(x, iconY, iconSize + 10, iconSize + 10);
+      border.setStrokeStyle(3, 0xffffff, 1);
+      border.setVisible(selectable && this.registry.get("selectedLiftId") === lift.id);
+      this.liftSelectionBorders[lift.id] = border;
+
+      const labelText = selectable ? lift.name : `${lift.name}\n(Coming soon)`;
+      this.add
+        .text(x, iconY + iconSize / 2 + 16, labelText, {
+          fontSize: "14px",
+          color: selectable ? "#c0c0c0" : "#707070",
+          align: "center",
+          wordWrap: { width: iconSize + gap - 10 },
+        })
+        .setOrigin(0.5, 0);
+
+      if (selectable) {
+        icon.setInteractive({ useHandCursor: true });
+        icon.on("pointerdown", () => this.selectLift(lift.id));
+      }
+    });
+  }
+
+  selectLift(liftId) {
+    this.registry.set("selectedLiftId", liftId);
+
+    Object.entries(this.liftSelectionBorders).forEach(([id, border]) => {
+      border.setVisible(id === liftId);
     });
   }
 
@@ -86,11 +137,14 @@ export class MainMenuScene extends Phaser.Scene {
     });
   }
 
-  createItemIcon(item, x, y, size) {
-    if (item.iconTextureKey) {
-      return this.add.image(x, y, item.iconTextureKey).setDisplaySize(size, size);
+  createItemIcon(item, x, y, size, { dimmed = false } = {}) {
+    const textureKey = item.iconTextureKey ?? item.platformTextureKey;
+    const alpha = dimmed ? 0.35 : 1;
+
+    if (textureKey) {
+      return this.add.image(x, y, textureKey).setDisplaySize(size, size).setAlpha(alpha);
     }
 
-    return this.add.rectangle(x, y, size, size, item.color);
+    return this.add.rectangle(x, y, size, size, item.color, alpha);
   }
 }
