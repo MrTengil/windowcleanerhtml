@@ -15,7 +15,7 @@ const BUILDING_X = CANVAS_WIDTH / 2;
 const WINDOW_Y = 800;
 const WINDOW_WIDTH = 420;
 const WINDOW_HEIGHT = 520;
-const WINDOW_OFFSET_X = 30;
+const WINDOW_OFFSET_X = 0;
 const WINDOW_CENTER_X = BUILDING_X + WINDOW_OFFSET_X;
 const WINDOW_LEFT = WINDOW_CENTER_X - WINDOW_WIDTH / 2;
 const WINDOW_TOP = WINDOW_Y - WINDOW_HEIGHT / 2;
@@ -26,6 +26,7 @@ const SKY_DEPTH = -30;
 const SKYLINE_DEPTH = -20;
 const CLOUD_DEPTH = -10;
 const LIFT_DEPTH = 10;
+const ROPE_DEPTH = LIFT_DEPTH - 1;
 const CLOUD_COUNT = 5;
 const CLOUD_BAND_TOP = -60;
 const CLOUD_BAND_BOTTOM = 220;
@@ -57,17 +58,21 @@ const ROPE_TOP_OVERSHOOT = 60;
 const LIFT_PLATFORM_SPECS = {
   gondola: {
     nativeWidth: 640,
-    nativeHeight: 420,
-    ropeAnchorY: 0,
-    ropeWidth: 16,
-    ropeAnchorsX: [150, 170, 470, 490],
+    nativeHeight: 250,
+    displayWidth: 800,
+    ropeAnchorY: 26,
+    ropeWidth: 10,
+    ropeAnchorsX: [160, 480],
+    ropeBehindPlatform: true,
   },
   "hanging-board": {
     nativeWidth: 520,
     nativeHeight: 175,
+    displayWidth: 760,
     ropeAnchorY: 15,
-    ropeWidth: 30,
+    ropeWidth: 12,
     ropeAnchorsX: [95, 425],
+    ropeBehindPlatform: false,
   },
 };
 
@@ -285,26 +290,27 @@ export class HouseCleanScene extends Phaser.Scene {
     }
 
     const spec = LIFT_PLATFORM_SPECS[lift.id];
-    const scaleFactor = WALL_WIDTH / spec.nativeWidth;
+    const scaleFactor = spec.displayWidth / spec.nativeWidth;
     const displayHeight = spec.nativeHeight * scaleFactor;
-
-    this.add
-      .image(BUILDING_X, LIFT_Y, lift.platformTextureKey)
-      .setDisplaySize(WALL_WIDTH, displayHeight)
-      .setDepth(LIFT_DEPTH);
+    const ropeDepth = spec.ropeBehindPlatform ? ROPE_DEPTH : LIFT_DEPTH;
 
     const platformTopY = LIFT_Y - displayHeight / 2;
 
     spec.ropeAnchorsX.forEach((localX) => {
-      const anchorX = BUILDING_X - WALL_WIDTH / 2 + localX * scaleFactor;
+      const anchorX = BUILDING_X - spec.displayWidth / 2 + localX * scaleFactor;
       const anchorY = platformTopY + spec.ropeAnchorY * scaleFactor;
       const ropeHeight = anchorY + ROPE_TOP_OVERSHOOT;
 
       this.add
-        .tileSprite(anchorX, anchorY, spec.ropeWidth * scaleFactor, ropeHeight, lift.ropeTextureKey)
+        .tileSprite(anchorX, anchorY, spec.ropeWidth, ropeHeight, lift.ropeTextureKey)
         .setOrigin(0.5, 1)
-        .setDepth(LIFT_DEPTH);
+        .setDepth(ropeDepth);
     });
+
+    this.add
+      .image(BUILDING_X, LIFT_Y, lift.platformTextureKey)
+      .setDisplaySize(spec.displayWidth, displayHeight)
+      .setDepth(LIFT_DEPTH);
   }
 
   spawnFloorSegment(floor) {
