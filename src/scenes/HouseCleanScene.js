@@ -391,6 +391,10 @@ export class HouseCleanScene extends Phaser.Scene {
     this.activateSegment(nextSegment);
     this.ensureFloorSpawned(this.currentFloor + 1);
 
+    if (this.currentFloor > CLOUD_FIRST_FLOOR && this.clouds.length === 0) {
+      this.spawnClouds();
+    }
+
     this.tweens.add({
       targets: this.scroll,
       offset: this.scroll.offset + SEGMENT_SPACING,
@@ -398,10 +402,6 @@ export class HouseCleanScene extends Phaser.Scene {
       ease: "Cubic.easeInOut",
       onComplete: () => {
         this.cullScrolledSegments();
-
-        if (this.currentFloor > CLOUD_FIRST_FLOOR && this.clouds.length === 0) {
-          this.spawnClouds();
-        }
 
         this.isTransitioning = false;
       },
