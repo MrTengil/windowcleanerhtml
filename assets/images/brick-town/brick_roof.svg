@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 104" width="640" height="104">
+  <!--
+    Standalone roof cap — just the topper piece. Place it directly on top of
+    your existing stacked building (aligned to the same 640px width), no
+    extra wall/quoin section included since your floor tile already has that.
+    Transparent above the coping and below the cornice.
+  -->
+  <defs>
+    <pattern id="brick" width="128" height="64" patternUnits="userSpaceOnUse">
+      <rect width="128" height="64" fill="#9C3B2B"/>
+      <rect x="2" y="2" width="124" height="28" rx="2" fill="#B04935"/>
+      <rect x="2" y="2" width="124" height="10" rx="2" fill="#C1583F" opacity="0.55"/>
+      <rect x="-62" y="34" width="124" height="28" rx="2" fill="#A5432F"/>
+      <rect x="-62" y="34" width="124" height="10" rx="2" fill="#B85940" opacity="0.5"/>
+      <rect x="66" y="34" width="124" height="28" rx="2" fill="#A5432F"/>
+      <rect x="66" y="34" width="124" height="10" rx="2" fill="#B85940" opacity="0.5"/>
+    </pattern>
+
+    <linearGradient id="quoinLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E4D3AC"/>
+      <stop offset="100%" stop-color="#D2BE90"/>
+    </linearGradient>
+    <linearGradient id="quoinDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C7B387"/>
+      <stop offset="100%" stop-color="#B39F73"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ===== Parapet wall ===== -->
+  <rect x="0" y="18" width="640" height="46" fill="url(#brick)"/>
+  <g stroke="#8F7C55" stroke-width="2">
+    <rect x="0"   y="18" width="56" height="46" fill="url(#quoinLight)"/>
+    <rect x="584" y="18" width="56" height="46" fill="url(#quoinDark)"/>
+  </g>
+  <rect x="54"  y="18" width="6" height="46" fill="#3A2A18" opacity="0.35"/>
+  <rect x="580" y="18" width="6" height="46" fill="#3A2A18" opacity="0.35"/>
+
+  <!-- Coping cap along the very top edge -->
+  <rect x="-6" y="0" width="652" height="18" rx="4" fill="url(#quoinLight)" stroke="#8F7C55" stroke-width="2"/>
+  <rect x="-6" y="12" width="652" height="6" fill="#8F7C55" opacity="0.5"/>
+
+  <!-- ===== Decorative cornice with dentil molding ===== -->
+  <rect x="-10" y="64" width="660" height="26" fill="url(#quoinDark)" stroke="#8F7C55" stroke-width="2"/>
+  <rect x="-10" y="86" width="660" height="8" fill="#5A4A30" opacity="0.5"/>
+  <!-- dentil blocks -->
+  <g fill="url(#quoinLight)" stroke="#8F7C55" stroke-width="1.5">
+    <rect x="10"  y="90" width="20" height="14"/>
+    <rect x="42"  y="90" width="20" height="14"/>
+    <rect x="74"  y="90" width="20" height="14"/>
+    <rect x="106" y="90" width="20" height="14"/>
+    <rect x="138" y="90" width="20" height="14"/>
+    <rect x="170" y="90" width="20" height="14"/>
+    <rect x="202" y="90" width="20" height="14"/>
+    <rect x="234" y="90" width="20" height="14"/>
+    <rect x="266" y="90" width="20" height="14"/>
+    <rect x="298" y="90" width="20" height="14"/>
+    <rect x="330" y="90" width="20" height="14"/>
+    <rect x="362" y="90" width="20" height="14"/>
+    <rect x="394" y="90" width="20" height="14"/>
+    <rect x="426" y="90" width="20" height="14"/>
+    <rect x="458" y="90" width="20" height="14"/>
+    <rect x="490" y="90" width="20" height="14"/>
+    <rect x="522" y="90" width="20" height="14"/>
+    <rect x="554" y="90" width="20" height="14"/>
+    <rect x="586" y="90" width="20" height="14"/>
+    <rect x="610" y="90" width="20" height="14"/>
+  </g>
+</svg>

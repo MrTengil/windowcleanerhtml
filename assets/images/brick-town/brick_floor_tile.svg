@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 384" width="640" height="384">
+  <!--
+    Repeatable brick-house floor tile, narrow/vertical for portrait mobile play.
+    Height (384px) is an exact multiple of the brick pattern's 64px row cycle,
+    so stacking copies of this tile edge-to-edge (y = 0, 384, 768, ...) tiles
+    seamlessly with no visible seam in the brickwork or the corner quoins.
+  -->
+  <defs>
+    <!-- Brick pattern -->
+    <pattern id="brick" width="128" height="64" patternUnits="userSpaceOnUse">
+      <rect width="128" height="64" fill="#9C3B2B"/>
+      <!-- row 1 -->
+      <rect x="2" y="2" width="124" height="28" rx="2" fill="#B04935"/>
+      <rect x="2" y="2" width="124" height="10" rx="2" fill="#C1583F" opacity="0.55"/>
+      <!-- row 2, offset -->
+      <rect x="-62" y="34" width="124" height="28" rx="2" fill="#A5432F"/>
+      <rect x="-62" y="34" width="124" height="10" rx="2" fill="#B85940" opacity="0.5"/>
+      <rect x="66" y="34" width="124" height="28" rx="2" fill="#A5432F"/>
+      <rect x="66" y="34" width="124" height="10" rx="2" fill="#B85940" opacity="0.5"/>
+    </pattern>
+
+    <linearGradient id="quoinLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E4D3AC"/>
+      <stop offset="100%" stop-color="#D2BE90"/>
+    </linearGradient>
+    <linearGradient id="quoinDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C7B387"/>
+      <stop offset="100%" stop-color="#B39F73"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Base wall (full width, brick shows behind the quoins) -->
+  <rect x="0" y="0" width="640" height="384" fill="url(#brick)"/>
+
+  <!-- LEFT corner quoins -->
+  <g stroke="#8F7C55" stroke-width="2">
+    <rect x="0" y="0"   width="56" height="64" fill="url(#quoinLight)"/>
+    <rect x="0" y="64"  width="56" height="64" fill="url(#quoinDark)"/>
+    <rect x="0" y="128" width="56" height="64" fill="url(#quoinLight)"/>
+    <rect x="0" y="192" width="56" height="64" fill="url(#quoinDark)"/>
+    <rect x="0" y="256" width="56" height="64" fill="url(#quoinLight)"/>
+    <rect x="0" y="320" width="56" height="64" fill="url(#quoinDark)"/>
+  </g>
+  <!-- inner shadow where quoin meets brick -->
+  <rect x="54" y="0" width="6" height="384" fill="#3A2A18" opacity="0.35"/>
+
+  <!-- RIGHT corner quoins (mirrored) -->
+  <g stroke="#8F7C55" stroke-width="2">
+    <rect x="584" y="0"   width="56" height="64" fill="url(#quoinDark)"/>
+    <rect x="584" y="64"  width="56" height="64" fill="url(#quoinLight)"/>
+    <rect x="584" y="128" width="56" height="64" fill="url(#quoinDark)"/>
+    <rect x="584" y="192" width="56" height="64" fill="url(#quoinLight)"/>
+    <rect x="584" y="256" width="56" height="64" fill="url(#quoinDark)"/>
+    <rect x="584" y="320" width="56" height="64" fill="url(#quoinLight)"/>
+  </g>
+  <!-- inner shadow where quoin meets brick -->
+  <rect x="580" y="0" width="6" height="384" fill="#3A2A18" opacity="0.35"/>
+
+  <!-- Drainpipe running full tile height, tucked just inside the left quoin -->
+  <rect x="70" y="0" width="26" height="384" fill="#4A5058"/>
+  <rect x="70" y="0" width="9" height="384" fill="#6B7482" opacity="0.6"/>
+  <rect x="64" y="180" width="38" height="16" rx="5" fill="#3A3F47"/>
+</svg>
