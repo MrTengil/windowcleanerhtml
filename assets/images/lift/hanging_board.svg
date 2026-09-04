@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 215 520 175" width="520" height="175">
+  <!--
+    Wide, thin plank with 4 rope anchor points (2 near each end), each pair
+    converging into a single knot per side. Cropped right at the
+    convergence knot — no single rope continuing upward — so you can
+    stitch the separate rope_tan_tile.svg segments on above it to reach
+    whatever height you need. (Internal coordinates are unchanged from the
+    full-height version; only the viewBox window was cropped, so the knot
+    still sits at y=230 in this file's own coordinate space.)
+  -->
+  <defs>
+    <linearGradient id="boardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8DC63F"/>
+      <stop offset="100%" stop-color="#5C9A2A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ===== Ropes (drawn first, so the board can sit on top and hide the segment passing through it) ===== -->
+  <g stroke="#C7A968" stroke-width="9" stroke-linecap="round" fill="none">
+    <!-- left side: V bridle from two anchors up to a convergence knot, plus a short tail poking out the bottom of the board -->
+    <line x1="60"  y1="378" x2="95" y2="230"/>
+    <line x1="130" y1="378" x2="95" y2="230"/>
+
+    <!-- right side, mirrored -->
+    <line x1="390" y1="378" x2="425" y2="230"/>
+    <line x1="460" y1="378" x2="425" y2="230"/>
+  </g>
+  <!-- convergence knots (the rope tiles pick up from here) -->
+  <circle cx="95" cy="230" r="7" fill="#8A6F3C"/>
+  <circle cx="425" cy="230" r="7" fill="#8A6F3C"/>
+  <!-- small knots where the rope tails poke out below the board -->
+  <circle cx="60"  cy="378" r="6" fill="#8A6F3C"/>
+  <circle cx="130" cy="378" r="6" fill="#8A6F3C"/>
+  <circle cx="390" cy="378" r="6" fill="#8A6F3C"/>
+  <circle cx="460" cy="378" r="6" fill="#8A6F3C"/>
+
+  <!-- ===== Board (wide, thin plank) — drawn on top, hides the rope where it passes through ===== -->
+  <rect x="20" y="344" width="480" height="18" rx="8" fill="url(#boardGrad)" stroke="#3F6B1D" stroke-width="3"/>
+  <!-- board grain / plank seams -->
+  <g stroke="#3F6B1D" stroke-width="1.5" opacity="0.4">
+    <line x1="160" y1="347" x2="160" y2="359"/>
+    <line x1="260" y1="347" x2="260" y2="359"/>
+    <line x1="360" y1="347" x2="360" y2="359"/>
+  </g>
+  <!-- board highlight -->
+  <rect x="24" y="346" width="472" height="4" rx="2" fill="#A9DA5C" opacity="0.6"/>
+
+  <!-- Wooden reinforcement blocks at each of the 4 anchor points, with a through-hole -->
+  <g fill="#B49554" stroke="#8A6F3C" stroke-width="2">
+    <rect x="48"  y="338" width="24" height="14" rx="5"/>
+    <rect x="118" y="338" width="24" height="14" rx="5"/>
+    <rect x="378" y="338" width="24" height="14" rx="5"/>
+    <rect x="448" y="338" width="24" height="14" rx="5"/>
+  </g>
+  <circle cx="60"  cy="345" r="4" fill="#2E2416"/>
+  <circle cx="130" cy="345" r="4" fill="#2E2416"/>
+  <circle cx="390" cy="345" r="4" fill="#2E2416"/>
+  <circle cx="460" cy="345" r="4" fill="#2E2416"/>
+</svg>

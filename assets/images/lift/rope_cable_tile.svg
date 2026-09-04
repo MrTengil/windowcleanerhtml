@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 64" width="16" height="64">
+  <!--
+    Vertically-repeatable steel cable segment (dark gray, matches the
+    gondola's suspension cables). Flat top/bottom, no end caps — stitch
+    copies together end-to-end (y = 0, 64, 128, ...) for a cable of any
+    length. Twist texture via a diagonal pattern (period 16px, divides
+    this tile's 64px height evenly) using solid colors only, no gradients.
+  -->
+  <defs>
+    <pattern id="cableTex" width="16" height="16" patternUnits="userSpaceOnUse">
+      <rect width="16" height="16" fill="#3E4247"/>
+      <path d="M0,16 L16,0 M-4,4 L4,-4 M12,20 L20,12" stroke="#565C63" stroke-width="4" stroke-linecap="round"/>
+    </pattern>
+  </defs>
+
+  <rect x="0" y="0" width="16" height="64" fill="url(#cableTex)"/>
+  <rect x="2" y="0" width="3" height="64" fill="#8A929A" opacity="0.5"/>
+  <rect x="11" y="0" width="3" height="64" fill="#1E2226" opacity="0.5"/>
+</svg>
