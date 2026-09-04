@@ -12,7 +12,7 @@ const CANVAS_WIDTH = 720;
 const CANVAS_HEIGHT = 1560;
 
 const BUILDING_X = CANVAS_WIDTH / 2;
-const WINDOW_Y = 560;
+const WINDOW_Y = 800;
 const WINDOW_WIDTH = 420;
 const WINDOW_HEIGHT = 520;
 const WINDOW_OFFSET_X = 30;
@@ -34,7 +34,8 @@ const GROUND_HEIGHT = 300;
 const GROUND_Y = CANVAS_HEIGHT - GROUND_HEIGHT / 2;
 const ROOF_Y = 200;
 const ROOF_HEIGHT = 104;
-const LIFT_Y = 1000;
+const LIFT_Y = 1180;
+const HUD_DEPTH = 100;
 
 const DIRT_MASK_COLOR = 0x8a7f6a;
 const BRUSH_RADIUS = 100;
@@ -75,12 +76,16 @@ export class HouseCleanScene extends Phaser.Scene {
     this.buildToolbelt();
     this.buildLift();
 
-    this.spawnFloorSegment();
+    const firstFloor = this.spawnFloorSegment(1);
+
+    if (this.house.floors > 1) {
+      this.spawnFloorSegment(2);
+    }
 
     this.buildEraserBrush();
     this.buildToolIcon();
     this.setupSwipeInput();
-    this.resetFloor();
+    this.activateSegment(firstFloor);
   }
 
   update(time, delta) {
@@ -191,20 +196,22 @@ export class HouseCleanScene extends Phaser.Scene {
         fontSize: "28px",
         color: "#ffffff",
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(HUD_DEPTH);
 
-    this.progressBarGraphics = this.add.graphics();
+    this.progressBarGraphics = this.add.graphics().setDepth(HUD_DEPTH);
     this.drawProgressBar(0);
 
-    this.add.rectangle(40, 40, 40, 40, 0x333333).setStrokeStyle(2, 0xffffff, 0.6);
-    this.add.text(40, 40, "II", { fontSize: "18px", color: "#ffffff" }).setOrigin(0.5);
+    this.add.rectangle(40, 40, 40, 40, 0x333333).setStrokeStyle(2, 0xffffff, 0.6).setDepth(HUD_DEPTH);
+    this.add.text(40, 40, "II", { fontSize: "18px", color: "#ffffff" }).setOrigin(0.5).setDepth(HUD_DEPTH);
   }
 
   buildToolbelt() {
-    this.createToolIcon(680, 40, 50, { withBorder: true });
+    this.createToolIcon(680, 40, 50, { withBorder: true }).setDepth(HUD_DEPTH);
     this.add
       .text(680, 70, this.equippedTool.name, { fontSize: "12px", color: "#ffffff", align: "center" })
-      .setOrigin(0.5, 0);
+      .setOrigin(0.5, 0)
+      .setDepth(HUD_DEPTH);
   }
 
   createToolIcon(x, y, size, { withBorder }) {
@@ -235,9 +242,9 @@ export class HouseCleanScene extends Phaser.Scene {
     this.add.rectangle(BUILDING_X, LIFT_Y, 600, 40, lift.color);
   }
 
-  spawnFloorSegment() {
+  spawnFloorSegment(floor) {
     const worldY = segmentWorldY({
-      floor: this.currentFloor,
+      floor,
       restingY: WINDOW_Y,
       spacing: SEGMENT_SPACING,
     });
@@ -252,20 +259,31 @@ export class HouseCleanScene extends Phaser.Scene {
       .renderTexture(WINDOW_OFFSET_X - WINDOW_WIDTH / 2, -WINDOW_HEIGHT / 2, WINDOW_WIDTH, WINDOW_HEIGHT)
       .setOrigin(0, 0);
     container.add(dirtMask);
+    dirtMask.fill(DIRT_MASK_COLOR, 1);
 
-    if (this.currentFloor === 1) {
+    if (floor === 1) {
       const ground = this.add
         .image(0, GROUND_Y - WINDOW_Y, this.house.groundTextureKey)
         .setDisplaySize(CANVAS_WIDTH, GROUND_HEIGHT);
       container.add(ground);
     }
 
-    if (this.currentFloor === this.house.floors) {
+    if (floor === this.house.floors) {
       container.add(this.add.image(0, ROOF_Y - WINDOW_Y, this.house.roofTextureKey));
     }
 
-    this.segments.push({ container, worldY, floor: this.currentFloor });
-    this.dirtMask = dirtMask;
+    const segment = { container, dirtMask, worldY, floor };
+    this.segments.push(segment);
+
+    return segment;
+  }
+
+  activateSegment(segment) {
+    this.dirtMask = segment.dirtMask;
+    this.revealTracker = new RevealTracker({ width: WINDOW_WIDTH, height: WINDOW_HEIGHT, cellSize: REVEAL_CELL_SIZE });
+    this.floorComplete = false;
+
+    this.drawProgressBar(0);
   }
 
   cullScrolledSegments() {
@@ -357,16 +375,6 @@ export class HouseCleanScene extends Phaser.Scene {
     }
   }
 
-  resetFloor() {
-    this.dirtMask.clear();
-    this.dirtMask.fill(DIRT_MASK_COLOR, 1);
-
-    this.revealTracker = new RevealTracker({ width: WINDOW_WIDTH, height: WINDOW_HEIGHT, cellSize: REVEAL_CELL_SIZE });
-    this.floorComplete = false;
-
-    this.drawProgressBar(0);
-  }
-
   advanceFloor() {
     this.currentFloor += 1;
 
@@ -382,8 +390,8 @@ export class HouseCleanScene extends Phaser.Scene {
   playFloorTransition() {
     this.isTransitioning = true;
 
-    this.spawnFloorSegment();
-    this.resetFloor();
+    const nextSegment = this.segments.find((segment) => segment.floor === this.currentFloor);
+    this.activateSegment(nextSegment);
 
     this.tweens.add({
       targets: this.scroll,
@@ -392,6 +400,13 @@ export class HouseCleanScene extends Phaser.Scene {
       ease: "Cubic.easeInOut",
       onComplete: () => {
         this.cullScrolledSegments();
+
+        const upcomingFloor = this.currentFloor + 1;
+        const alreadySpawned = this.segments.some((segment) => segment.floor === upcomingFloor);
+
+        if (upcomingFloor <= this.house.floors && !alreadySpawned) {
+          this.spawnFloorSegment(upcomingFloor);
+        }
 
         if (this.currentFloor > CLOUD_FIRST_FLOOR && this.clouds.length === 0) {
           this.spawnClouds();
