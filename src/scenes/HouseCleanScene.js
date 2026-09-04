@@ -162,7 +162,10 @@ export class HouseCleanScene extends Phaser.Scene {
     container.add(dirtMask);
 
     if (this.currentFloor === 1) {
-      container.add(this.add.image(0, GROUND_Y - WINDOW_Y, this.house.groundTextureKey));
+      const ground = this.add
+        .image(0, GROUND_Y - WINDOW_Y, this.house.groundTextureKey)
+        .setDisplaySize(CANVAS_WIDTH, GROUND_HEIGHT);
+      container.add(ground);
     }
 
     if (this.currentFloor === this.house.floors) {
