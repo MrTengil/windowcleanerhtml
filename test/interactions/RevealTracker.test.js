@@ -43,4 +43,28 @@ describe("RevealTracker", () => {
 
     expect(tracker.isFullyRevealed(0.9)).toBe(true);
   });
+
+  it("marks the cell containing the point when the radius is smaller than the cell", () => {
+    const tracker = new RevealTracker({ width: 100, height: 100, cellSize: 50 });
+
+    tracker.markRevealedInRadius(10, 10, 5);
+
+    expect(tracker.revealedFraction()).toBe(0.25);
+  });
+
+  it("marks every cell whose center falls within a larger radius", () => {
+    const tracker = new RevealTracker({ width: 100, height: 100, cellSize: 25 });
+
+    tracker.markRevealedInRadius(50, 50, 30);
+
+    expect(tracker.revealedFraction()).toBe(4 / 16);
+  });
+
+  it("ignores cells outside the grid when the radius extends past the edge", () => {
+    const tracker = new RevealTracker({ width: 100, height: 100, cellSize: 50 });
+
+    tracker.markRevealedInRadius(0, 0, 60);
+
+    expect(tracker.revealedFraction()).toBe(0.25);
+  });
 });
