@@ -20,7 +20,7 @@ const DIRT_MASK_COLOR = 0x8a7f6a;
 const BRUSH_RADIUS = 28;
 const ERASE_STEP_DISTANCE = 12;
 const REVEAL_CELL_SIZE = 40;
-const REVEAL_THRESHOLD = 0.9;
+const REVEAL_THRESHOLD = 0.99;
 
 const FLOOR_TRANSITION_OFFSET = 150;
 const FLOOR_TRANSITION_DURATION = 350;
@@ -188,20 +188,7 @@ export class HouseCleanScene extends Phaser.Scene {
       const y = Phaser.Math.Linear(from.y, to.y, t);
 
       this.dirtMask.erase(this.eraserBrush, x, y);
-      this.markRevealedUnderBrush(x, y);
-    }
-  }
-
-  markRevealedUnderBrush(x, y) {
-    const offsets = [-BRUSH_RADIUS * 0.7, 0, BRUSH_RADIUS * 0.7];
-
-    for (const dx of offsets) {
-      for (const dy of offsets) {
-        this.revealTracker.markRevealedAt(
-          Phaser.Math.Clamp(x + dx, 0, WINDOW_WIDTH),
-          Phaser.Math.Clamp(y + dy, 0, WINDOW_HEIGHT),
-        );
-      }
+      this.revealTracker.markRevealedInRadius(x, y, BRUSH_RADIUS);
     }
   }
 
