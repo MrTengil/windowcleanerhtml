@@ -12,6 +12,11 @@ export class BootScene extends Phaser.Scene {
     this.load.image("brick-town-skyline", "assets/images/brick-town/skyline_background.svg");
     this.load.image("squeegee", "assets/images/tools/squeegee.svg");
 
+    this.load.image("lift-gondola", "assets/images/lift/gondola.svg");
+    this.load.image("lift-hanging-board", "assets/images/lift/hanging_board.svg");
+    this.load.image("lift-rope-cable", "assets/images/lift/rope_cable_tile.svg");
+    this.load.image("lift-rope-tan", "assets/images/lift/rope_tan_tile.svg");
+
     CLOUDS.forEach((cloud) => {
       this.load.image(cloud.textureKey, `assets/images/clouds/${cloud.file}`);
     });
