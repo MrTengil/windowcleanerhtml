@@ -77,10 +77,7 @@ export class HouseCleanScene extends Phaser.Scene {
     this.buildLift();
 
     const firstFloor = this.spawnFloorSegment(1);
-
-    if (this.house.floors > 1) {
-      this.spawnFloorSegment(2);
-    }
+    this.ensureFloorSpawned(2);
 
     this.buildEraserBrush();
     this.buildToolIcon();
@@ -392,6 +389,7 @@ export class HouseCleanScene extends Phaser.Scene {
 
     const nextSegment = this.segments.find((segment) => segment.floor === this.currentFloor);
     this.activateSegment(nextSegment);
+    this.ensureFloorSpawned(this.currentFloor + 1);
 
     this.tweens.add({
       targets: this.scroll,
@@ -401,13 +399,6 @@ export class HouseCleanScene extends Phaser.Scene {
       onComplete: () => {
         this.cullScrolledSegments();
 
-        const upcomingFloor = this.currentFloor + 1;
-        const alreadySpawned = this.segments.some((segment) => segment.floor === upcomingFloor);
-
-        if (upcomingFloor <= this.house.floors && !alreadySpawned) {
-          this.spawnFloorSegment(upcomingFloor);
-        }
-
         if (this.currentFloor > CLOUD_FIRST_FLOOR && this.clouds.length === 0) {
           this.spawnClouds();
         }
@@ -415,6 +406,14 @@ export class HouseCleanScene extends Phaser.Scene {
         this.isTransitioning = false;
       },
     });
+  }
+
+  ensureFloorSpawned(floor) {
+    const alreadySpawned = this.segments.some((segment) => segment.floor === floor);
+
+    if (floor <= this.house.floors && !alreadySpawned) {
+      this.spawnFloorSegment(floor);
+    }
   }
 
   showLevelComplete() {
