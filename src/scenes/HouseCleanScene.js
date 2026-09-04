@@ -36,7 +36,7 @@ const GROUND_HEIGHT = 300;
 const GROUND_Y = CANVAS_HEIGHT - GROUND_HEIGHT / 2;
 const ROOF_Y = 200;
 const ROOF_HEIGHT = 104;
-const LIFT_Y = 1180;
+const LIFT_Y = 1280;
 const HUD_DEPTH = 100;
 
 const DIRT_MASK_COLOR = 0x8a7f6a;
@@ -59,7 +59,7 @@ const LIFT_PLATFORM_SPECS = {
   gondola: {
     nativeWidth: 640,
     nativeHeight: 250,
-    displayWidth: 800,
+    displayWidth: 900,
     ropeAnchorY: 26,
     ropeWidth: 10,
     ropeAnchorsX: [160, 480],
@@ -491,15 +491,15 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   showLevelComplete() {
-    this.add.rectangle(BUILDING_X, CANVAS_HEIGHT / 2, CANVAS_WIDTH, CANVAS_HEIGHT, 0x000000, 0.7);
+    this.add.rectangle(BUILDING_X, CANVAS_HEIGHT / 2, CANVAS_WIDTH, CANVAS_HEIGHT, 0x000000, 0.7).setDepth(100);
     this.add
       .text(360, 580, "Level Complete", { fontSize: "40px", color: "#ffffff" })
-      .setOrigin(0.5);
+      .setOrigin(0.5).setDepth(101);
 
     const menuButton = this.add
       .rectangle(360, 660, 200, 60, 0x4caf50)
-      .setInteractive({ useHandCursor: true });
-    this.add.text(360, 660, "Menu", { fontSize: "24px", color: "#ffffff" }).setOrigin(0.5);
+      .setInteractive({ useHandCursor: true }).setDepth(101);
+    this.add.text(360, 660, "Menu", { fontSize: "24px", color: "#ffffff" }).setOrigin(0.5).setDepth(101);
 
     menuButton.on("pointerdown", () => this.scene.start("MainMenuScene"));
   }
