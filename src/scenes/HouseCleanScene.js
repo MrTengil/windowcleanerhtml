@@ -3,6 +3,7 @@ import { DIRT_TYPES } from "../config/dirtTypes.js";
 import { TOOLS } from "../config/tools.js";
 import { LIFTS } from "../config/lifts.js";
 import { RevealTracker } from "../interactions/RevealTracker.js";
+import { segmentWorldY, hasScrolledOutOfView } from "../utils/worldScroll.js";
 import { formatFloorLabel } from "../ui/HUD.js";
 
 const WINDOW_X = 360;
@@ -27,8 +28,9 @@ const ERASE_STEP_DISTANCE = 12;
 const REVEAL_CELL_SIZE = 40;
 const REVEAL_THRESHOLD = 0.99;
 
-const FLOOR_TRANSITION_OFFSET = 150;
-const FLOOR_TRANSITION_DURATION = 350;
+const WALL_TILE_HEIGHT = 384;
+const SEGMENT_SPACING = WALL_TILE_HEIGHT * 2;
+const SCROLL_DURATION = 700;
 
 const PROGRESS_BAR_X = 160;
 const PROGRESS_BAR_Y = 80;
@@ -45,6 +47,8 @@ export class HouseCleanScene extends Phaser.Scene {
     this.currentFloor = 1;
     this.isTransitioning = false;
     this.floorComplete = false;
+    this.scroll = { offset: 0 };
+    this.segments = [];
   }
 
   create() {
@@ -56,14 +60,20 @@ export class HouseCleanScene extends Phaser.Scene {
     this.buildToolbelt();
     this.buildLift();
 
-    const segment = this.buildFloorSegment(WINDOW_Y);
-    this.floorContainer = segment.container;
-    this.dirtMask = segment.dirtMask;
+    this.spawnFloorSegment();
 
     this.buildEraserBrush();
     this.buildToolIcon();
     this.setupSwipeInput();
     this.resetFloor();
+  }
+
+  update() {
+    for (const segment of this.segments) {
+      segment.container.y = segment.worldY + this.scroll.offset;
+    }
+
+    this.wall.tilePositionY = -this.scroll.offset;
   }
 
   findEquippedTool() {
@@ -77,7 +87,7 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildBuildingWall() {
-    this.add.tileSprite(WINDOW_X, WALL_HEIGHT / 2, WALL_WIDTH, WALL_HEIGHT, this.house.wallTextureKey);
+    this.wall = this.add.tileSprite(WINDOW_X, WALL_HEIGHT / 2, WALL_WIDTH, WALL_HEIGHT, this.house.wallTextureKey);
   }
 
   buildHud() {
@@ -130,8 +140,13 @@ export class HouseCleanScene extends Phaser.Scene {
     this.add.rectangle(360, 880, 600, 40, lift.color);
   }
 
-  buildFloorSegment(y) {
-    const container = this.add.container(WINDOW_X, y);
+  spawnFloorSegment() {
+    const worldY = segmentWorldY({
+      floor: this.currentFloor,
+      restingY: WINDOW_Y,
+      spacing: SEGMENT_SPACING,
+    });
+    const container = this.add.container(WINDOW_X, worldY + this.scroll.offset);
 
     const pane = this.add
       .rectangle(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0x9fd3e8)
@@ -151,7 +166,25 @@ export class HouseCleanScene extends Phaser.Scene {
       container.add(this.add.image(0, ROOF_Y - WINDOW_Y, this.house.roofTextureKey));
     }
 
-    return { container, dirtMask };
+    this.segments.push({ container, worldY });
+    this.dirtMask = dirtMask;
+  }
+
+  cullScrolledSegments() {
+    this.segments = this.segments.filter((segment) => {
+      const outOfView = hasScrolledOutOfView({
+        worldY: segment.worldY,
+        offset: this.scroll.offset,
+        canvasHeight: WALL_HEIGHT,
+        spacing: SEGMENT_SPACING,
+      });
+
+      if (outOfView) {
+        segment.container.destroy();
+      }
+
+      return !outOfView;
+    });
   }
 
   buildEraserBrush() {
@@ -251,27 +284,16 @@ export class HouseCleanScene extends Phaser.Scene {
   playFloorTransition() {
     this.isTransitioning = true;
 
-    const oldSegment = this.floorContainer;
-    const newSegment = this.buildFloorSegment(WINDOW_Y - FLOOR_TRANSITION_OFFSET);
-
-    this.floorContainer = newSegment.container;
-    this.dirtMask = newSegment.dirtMask;
+    this.spawnFloorSegment();
     this.resetFloor();
 
     this.tweens.add({
-      targets: oldSegment,
-      y: WINDOW_Y + FLOOR_TRANSITION_OFFSET,
-      duration: FLOOR_TRANSITION_DURATION,
-      ease: "Cubic.easeInOut",
-      onComplete: () => oldSegment.destroy(),
-    });
-
-    this.tweens.add({
-      targets: newSegment.container,
-      y: WINDOW_Y,
-      duration: FLOOR_TRANSITION_DURATION,
+      targets: this.scroll,
+      offset: this.scroll.offset + SEGMENT_SPACING,
+      duration: SCROLL_DURATION,
       ease: "Cubic.easeInOut",
       onComplete: () => {
+        this.cullScrolledSegments();
         this.isTransitioning = false;
       },
     });
