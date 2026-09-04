@@ -391,7 +391,7 @@ export class HouseCleanScene extends Phaser.Scene {
     this.activateSegment(nextSegment);
     this.ensureFloorSpawned(this.currentFloor + 1);
 
-    if (this.currentFloor > CLOUD_FIRST_FLOOR && this.clouds.length === 0) {
+    if (this.currentFloor + 1 > CLOUD_FIRST_FLOOR && this.clouds.length === 0) {
       this.spawnClouds();
     }
 
