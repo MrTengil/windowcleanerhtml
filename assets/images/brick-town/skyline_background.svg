@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1536" width="1024" height="1536">
+  <defs>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B6FB0"/>
+      <stop offset="35%" stop-color="#6E9FCC"/>
+      <stop offset="70%" stop-color="#A9C9DE"/>
+      <stop offset="100%" stop-color="#D9E7ED"/>
+    </linearGradient>
+
+    <linearGradient id="farGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#9AB4D6"/>
+      <stop offset="100%" stop-color="#B9CBDE"/>
+    </linearGradient>
+
+    <linearGradient id="midGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7F9FC4"/>
+      <stop offset="100%" stop-color="#96AFCB"/>
+    </linearGradient>
+
+    <linearGradient id="nearGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5E7FA8"/>
+      <stop offset="100%" stop-color="#7190B3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sky -->
+  <rect x="0" y="0" width="1024" height="1536" fill="url(#skyGrad)"/>
+
+  <!-- Far skyline (haziest, smallest) -->
+  <g fill="url(#farGrad)" opacity="0.55">
+    <rect x="0" y="1180" width="70" height="220"/>
+    <rect x="80" y="1140" width="55" height="260"/>
+    <rect x="150" y="1210" width="90" height="190"/>
+    <rect x="255" y="1160" width="60" height="240"/>
+    <rect x="330" y="1195" width="80" height="205"/>
+    <rect x="425" y="1130" width="65" height="270"/>
+    <rect x="505" y="1200" width="95" height="200"/>
+    <rect x="615" y="1150" width="70" height="250"/>
+    <rect x="700" y="1215" width="85" height="185"/>
+    <rect x="800" y="1140" width="60" height="260"/>
+    <rect x="875" y="1190" width="75" height="210"/>
+    <rect x="965" y="1160" width="59" height="240"/>
+  </g>
+
+  <!-- Mid skyline -->
+  <g fill="url(#midGrad)" opacity="0.75">
+    <rect x="-20" y="1280" width="110" height="256"/>
+    <rect x="100" y="1230" width="80" height="306"/>
+    <g><rect x="100" y="1230" width="80" height="14" fill="#7F9FC4"/></g>
+    <rect x="200" y="1300" width="120" height="236"/>
+    <rect x="340" y="1250" width="90" height="286"/>
+    <rect x="450" y="1310" width="140" height="226"/>
+    <rect x="610" y="1260" width="95" height="276"/>
+    <rect x="725" y="1305" width="115" height="231"/>
+    <rect x="860" y="1240" width="85" height="296"/>
+    <rect x="960" y="1290" width="90" height="246"/>
+    <!-- a few tower tops / antennas -->
+    <rect x="135" y="1200" width="10" height="30" fill="#7F9FC4"/>
+    <rect x="895" y="1210" width="8" height="30" fill="#7F9FC4"/>
+  </g>
+
+  <!-- Near skyline (closest, darkest, biggest silhouettes) -->
+  <g fill="url(#nearGrad)" opacity="0.9">
+    <rect x="-40" y="1380" width="160" height="156"/>
+    <rect x="140" y="1340" width="110" height="196"/>
+    <rect x="270" y="1400" width="150" height="136"/>
+    <rect x="440" y="1355" width="120" height="181"/>
+    <rect x="580" y="1410" width="170" height="126"/>
+    <rect x="770" y="1350" width="110" height="186"/>
+    <rect x="900" y="1395" width="124" height="141"/>
+    <!-- water tower silhouette -->
+    <g>
+      <rect x="185" y="1300" width="40" height="34" rx="4"/>
+      <polygon points="180,1300 230,1300 205,1275"/>
+      <line x1="205" y1="1334" x2="205" y2="1360" stroke="#5E7FA8" stroke-width="6"/>
+    </g>
+  </g>
+
+  <!-- Atmospheric haze near horizon to unify layers -->
+  <rect x="0" y="1150" width="1024" height="386" fill="#CFE0EC" opacity="0.18"/>
+</svg>

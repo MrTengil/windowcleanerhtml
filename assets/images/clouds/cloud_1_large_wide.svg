@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 283 126" width="283" height="126">
+  <defs>
+    <linearGradient id="cloudShade" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E7F0F6"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#cloudShade)">
+    <ellipse cx="133" cy="72" rx="95" ry="34"/>
+    <ellipse cx="198" cy="57" rx="65" ry="26"/>
+    <ellipse cx="78" cy="57" rx="58" ry="24"/>
+    <ellipse cx="133" cy="42" rx="55" ry="22"/>
+  </g>
+</svg>
