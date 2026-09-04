@@ -52,20 +52,18 @@ export class HouseCleanScene extends Phaser.Scene {
 
     this.buildSkyBackground();
     this.buildBuildingWall();
-    this.buildRoof();
-    this.buildGround();
     this.buildHud();
     this.buildToolbelt();
     this.buildLift();
-    const floor = this.buildFloorContainer(WINDOW_Y);
-    this.floorContainer = floor.container;
-    this.dirtMask = floor.dirtMask;
+
+    const segment = this.buildFloorSegment(WINDOW_Y);
+    this.floorContainer = segment.container;
+    this.dirtMask = segment.dirtMask;
 
     this.buildEraserBrush();
     this.buildToolIcon();
     this.setupSwipeInput();
     this.resetFloor();
-    this.updateBuildingState();
   }
 
   findEquippedTool() {
@@ -80,19 +78,6 @@ export class HouseCleanScene extends Phaser.Scene {
 
   buildBuildingWall() {
     this.add.tileSprite(WINDOW_X, WALL_HEIGHT / 2, WALL_WIDTH, WALL_HEIGHT, this.house.wallTextureKey);
-  }
-
-  buildRoof() {
-    this.roof = this.add.image(WINDOW_X, ROOF_Y, this.house.roofTextureKey);
-  }
-
-  buildGround() {
-    this.ground = this.add.image(WINDOW_X, GROUND_Y, this.house.groundTextureKey);
-  }
-
-  updateBuildingState() {
-    this.ground.setVisible(this.currentFloor === 1);
-    this.roof.setVisible(this.currentFloor === this.house.floors);
   }
 
   buildHud() {
@@ -145,7 +130,7 @@ export class HouseCleanScene extends Phaser.Scene {
     this.add.rectangle(360, 880, 600, 40, lift.color);
   }
 
-  buildFloorContainer(y) {
+  buildFloorSegment(y) {
     const container = this.add.container(WINDOW_X, y);
 
     const pane = this.add
@@ -157,6 +142,14 @@ export class HouseCleanScene extends Phaser.Scene {
       .renderTexture(-WINDOW_WIDTH / 2, -WINDOW_HEIGHT / 2, WINDOW_WIDTH, WINDOW_HEIGHT)
       .setOrigin(0, 0);
     container.add(dirtMask);
+
+    if (this.currentFloor === 1) {
+      container.add(this.add.image(0, GROUND_Y - WINDOW_Y, this.house.groundTextureKey));
+    }
+
+    if (this.currentFloor === this.house.floors) {
+      container.add(this.add.image(0, ROOF_Y - WINDOW_Y, this.house.roofTextureKey));
+    }
 
     return { container, dirtMask };
   }
@@ -244,8 +237,6 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   advanceFloor() {
-    const wasGroundFloor = this.currentFloor === 1;
-
     this.currentFloor += 1;
 
     if (this.currentFloor > this.house.floors) {
@@ -253,64 +244,36 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
-    const arrivingAtRoofFloor = this.currentFloor === this.house.floors;
-
     this.floorText.setText(formatFloorLabel(this.currentFloor, this.house.floors));
-    this.playFloorTransition({ wasGroundFloor, arrivingAtRoofFloor });
+    this.playFloorTransition();
   }
 
-  playFloorTransition({ wasGroundFloor, arrivingAtRoofFloor }) {
+  playFloorTransition() {
     this.isTransitioning = true;
 
-    const oldContainer = this.floorContainer;
-    const newFloor = this.buildFloorContainer(WINDOW_Y - FLOOR_TRANSITION_OFFSET);
+    const oldSegment = this.floorContainer;
+    const newSegment = this.buildFloorSegment(WINDOW_Y - FLOOR_TRANSITION_OFFSET);
 
-    this.floorContainer = newFloor.container;
-    this.dirtMask = newFloor.dirtMask;
+    this.floorContainer = newSegment.container;
+    this.dirtMask = newSegment.dirtMask;
     this.resetFloor();
 
     this.tweens.add({
-      targets: oldContainer,
+      targets: oldSegment,
       y: WINDOW_Y + FLOOR_TRANSITION_OFFSET,
       duration: FLOOR_TRANSITION_DURATION,
       ease: "Cubic.easeInOut",
-      onComplete: () => oldContainer.destroy(),
+      onComplete: () => oldSegment.destroy(),
     });
 
     this.tweens.add({
-      targets: newFloor.container,
+      targets: newSegment.container,
       y: WINDOW_Y,
       duration: FLOOR_TRANSITION_DURATION,
       ease: "Cubic.easeInOut",
       onComplete: () => {
         this.isTransitioning = false;
       },
-    });
-
-    if (wasGroundFloor) {
-      this.tweens.add({
-        targets: this.ground,
-        y: GROUND_Y + FLOOR_TRANSITION_OFFSET,
-        duration: FLOOR_TRANSITION_DURATION,
-        ease: "Cubic.easeInOut",
-        onComplete: () => this.ground.setVisible(false),
-      });
-    }
-
-    if (arrivingAtRoofFloor) {
-      this.playRoofEntrance();
-    }
-  }
-
-  playRoofEntrance() {
-    this.roof.setPosition(WINDOW_X, ROOF_Y - FLOOR_TRANSITION_OFFSET);
-    this.roof.setVisible(true);
-
-    this.tweens.add({
-      targets: this.roof,
-      y: ROOF_Y,
-      duration: FLOOR_TRANSITION_DURATION,
-      ease: "Cubic.easeInOut",
     });
   }
 
