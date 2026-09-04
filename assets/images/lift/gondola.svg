@@ -1,10 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" width="640" height="420">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 170 640 250" width="640" height="250">
   <!--
     Hanging gondola / scaffold platform, inspired by the reference window-
-    washer lift. Cables run straight up and are cut off at the top edge
-    (transparent) so you can attach them to your own crane/roof anchor and
-    let the platform hang at any height. Centered in a 640-wide canvas to
-    match the building tile width.
+    washer lift. Suspension cables removed — only the pulley wheels remain
+    at the top of each post, ready for you to stitch your own rope/cable
+    tiles (e.g. rope_cable_tile.svg) up from them to whatever height you
+    need. Centered in a 640-wide canvas to match the building tile width.
+    (Internal coordinates are unchanged; only the viewBox window was
+    cropped, so the pulleys still sit at y=196 in this file's own
+    coordinate space.)
   -->
   <defs>
     <linearGradient id="platformGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -25,15 +28,7 @@
     </linearGradient>
   </defs>
 
-  <!-- ===== Suspension cables (transparent above, meant to be cropped into your scene) ===== -->
-  <g stroke="#2E3238" stroke-width="5" stroke-linecap="round">
-    <line x1="150" y1="0" x2="150" y2="196"/>
-    <line x1="170" y1="0" x2="170" y2="196"/>
-    <line x1="470" y1="0" x2="470" y2="196"/>
-    <line x1="490" y1="0" x2="490" y2="196"/>
-  </g>
-
-  <!-- Pulley wheels where cables meet the platform posts -->
+  <!-- Pulley wheels at the top of each post -->
   <g fill="url(#metalGrad)" stroke="#2E3238" stroke-width="2">
     <circle cx="160" cy="196" r="16"/>
     <circle cx="480" cy="196" r="16"/>
