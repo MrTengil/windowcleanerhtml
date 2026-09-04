@@ -74,7 +74,7 @@ export class MainMenuScene extends Phaser.Scene {
     items.forEach((item, index) => {
       const x = startX + index * (iconSize + gap);
 
-      this.add.rectangle(x, iconY, iconSize, iconSize, item.color);
+      this.createItemIcon(item, x, iconY, iconSize);
       this.add
         .text(x, iconY + iconSize / 2 + 16, item.name, {
           fontSize: "14px",
@@ -84,5 +84,13 @@ export class MainMenuScene extends Phaser.Scene {
         })
         .setOrigin(0.5, 0);
     });
+  }
+
+  createItemIcon(item, x, y, size) {
+    if (item.iconTextureKey) {
+      return this.add.image(x, y, item.iconTextureKey).setDisplaySize(size, size);
+    }
+
+    return this.add.rectangle(x, y, size, size, item.color);
   }
 }
