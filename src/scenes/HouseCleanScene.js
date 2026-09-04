@@ -53,6 +53,24 @@ const PROGRESS_BAR_Y = 80;
 const PROGRESS_BAR_WIDTH = 400;
 const PROGRESS_BAR_HEIGHT = 16;
 
+const ROPE_TOP_OVERSHOOT = 60;
+const LIFT_PLATFORM_SPECS = {
+  gondola: {
+    nativeWidth: 640,
+    nativeHeight: 420,
+    ropeAnchorY: 0,
+    ropeWidth: 16,
+    ropeAnchorsX: [150, 170, 470, 490],
+  },
+  "hanging-board": {
+    nativeWidth: 520,
+    nativeHeight: 175,
+    ropeAnchorY: 15,
+    ropeWidth: 30,
+    ropeAnchorsX: [95, 425],
+  },
+};
+
 export class HouseCleanScene extends Phaser.Scene {
   constructor() {
     super("HouseCleanScene");
@@ -256,9 +274,37 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildLift() {
-    const lift = LIFTS.find((candidate) => candidate.id === this.house.liftId);
+    const selectedLiftId = this.registry.get("selectedLiftId") ?? this.house.liftId;
+    const lift =
+      LIFTS.find((candidate) => candidate.id === selectedLiftId) ??
+      LIFTS.find((candidate) => candidate.id === this.house.liftId);
 
-    this.add.rectangle(BUILDING_X, LIFT_Y, 600, 40, lift.color).setDepth(LIFT_DEPTH);
+    if (!lift.platformTextureKey) {
+      this.add.rectangle(BUILDING_X, LIFT_Y, 600, 40, lift.color).setDepth(LIFT_DEPTH);
+      return;
+    }
+
+    const spec = LIFT_PLATFORM_SPECS[lift.id];
+    const scaleFactor = WALL_WIDTH / spec.nativeWidth;
+    const displayHeight = spec.nativeHeight * scaleFactor;
+
+    this.add
+      .image(BUILDING_X, LIFT_Y, lift.platformTextureKey)
+      .setDisplaySize(WALL_WIDTH, displayHeight)
+      .setDepth(LIFT_DEPTH);
+
+    const platformTopY = LIFT_Y - displayHeight / 2;
+
+    spec.ropeAnchorsX.forEach((localX) => {
+      const anchorX = BUILDING_X - WALL_WIDTH / 2 + localX * scaleFactor;
+      const anchorY = platformTopY + spec.ropeAnchorY * scaleFactor;
+      const ropeHeight = anchorY + ROPE_TOP_OVERSHOOT;
+
+      this.add
+        .tileSprite(anchorX, anchorY, spec.ropeWidth * scaleFactor, ropeHeight, lift.ropeTextureKey)
+        .setOrigin(0.5, 1)
+        .setDepth(LIFT_DEPTH);
+    });
   }
 
   spawnFloorSegment(floor) {
