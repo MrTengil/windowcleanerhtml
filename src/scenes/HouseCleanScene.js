@@ -26,7 +26,6 @@ const SKY_DEPTH = -30;
 const SKYLINE_DEPTH = -20;
 const CLOUD_DEPTH = -10;
 const LIFT_DEPTH = 10;
-const ROPE_DEPTH = LIFT_DEPTH - 1;
 const CLOUD_COUNT = 5;
 const CLOUD_BAND_TOP = -60;
 const CLOUD_BAND_BOTTOM = 220;
@@ -284,33 +283,54 @@ export class HouseCleanScene extends Phaser.Scene {
       LIFTS.find((candidate) => candidate.id === selectedLiftId) ??
       LIFTS.find((candidate) => candidate.id === this.house.liftId);
 
+    this.liftContainer = this.add.container(BUILDING_X, LIFT_Y).setDepth(LIFT_DEPTH);
+    this.liftBaseX = BUILDING_X;
+    this.liftBaseY = LIFT_Y;
+
     if (!lift.platformTextureKey) {
-      this.add.rectangle(BUILDING_X, LIFT_Y, 600, 40, lift.color).setDepth(LIFT_DEPTH);
+      this.liftContainer.add(this.add.rectangle(0, 0, 600, 40, lift.color));
       return;
     }
 
     const spec = LIFT_PLATFORM_SPECS[lift.id];
     const scaleFactor = spec.displayWidth / spec.nativeWidth;
     const displayHeight = spec.nativeHeight * scaleFactor;
-    const ropeDepth = spec.ropeBehindPlatform ? ROPE_DEPTH : LIFT_DEPTH;
+    const platformTopY = -displayHeight / 2;
 
-    const platformTopY = LIFT_Y - displayHeight / 2;
+    const platform = this.add
+      .image(0, 0, lift.platformTextureKey)
+      .setDisplaySize(spec.displayWidth, displayHeight);
 
-    spec.ropeAnchorsX.forEach((localX) => {
-      const anchorX = BUILDING_X - spec.displayWidth / 2 + localX * scaleFactor;
+    const ropes = spec.ropeAnchorsX.map((localX) => {
+      const anchorX = -spec.displayWidth / 2 + localX * scaleFactor;
       const anchorY = platformTopY + spec.ropeAnchorY * scaleFactor;
-      const ropeHeight = anchorY + ROPE_TOP_OVERSHOOT;
+      // Anchor is local to liftContainer (origin at LIFT_Y), but the rope
+      // still needs to reach the top of the screen in absolute coordinates.
+      const ropeHeight = LIFT_Y + anchorY + ROPE_TOP_OVERSHOOT;
 
-      this.add
+      return this.add
         .tileSprite(anchorX, anchorY, spec.ropeWidth, ropeHeight, lift.ropeTextureKey)
-        .setOrigin(0.5, 1)
-        .setDepth(ropeDepth);
+        .setOrigin(0.5, 1);
     });
 
-    this.add
-      .image(BUILDING_X, LIFT_Y, lift.platformTextureKey)
-      .setDisplaySize(spec.displayWidth, displayHeight)
-      .setDepth(LIFT_DEPTH);
+    // Containers render children in the order added, so this preserves the
+    // "rope behind platform" layering you had via setDepth before.
+    if (spec.ropeBehindPlatform) {
+      this.liftContainer.add([...ropes, platform]);
+    } else {
+      this.liftContainer.add([platform, ...ropes]);
+    }
+  }
+
+  animateLiftBounce() {
+    this.tweens.add({
+      targets: this.liftContainer,
+      y: this.liftBaseY - 24,
+      x: this.liftBaseX + 6,
+      duration: 140,
+      yoyo: true,
+      ease: "Sine.easeOut",
+    });
   }
 
   spawnFloorSegment(floor) {
@@ -448,6 +468,7 @@ export class HouseCleanScene extends Phaser.Scene {
 
   advanceFloor() {
     this.currentFloor += 1;
+    this.animateLiftBounce();
 
     if (this.currentFloor > this.house.floors) {
       this.showLevelComplete();
