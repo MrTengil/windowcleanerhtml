@@ -6,6 +6,7 @@ import { RevealTracker } from "../interactions/RevealTracker.js";
 import { segmentWorldY, hasScrolledOutOfView } from "../utils/worldScroll.js";
 import { createCloudSpec } from "../utils/cloudSpec.js";
 import { computeSweepRotation } from "../utils/sweepRotation.js";
+import { SweepSmoother } from "../interactions/SweepSmoother.js";
 import { CLOUDS, CLOUD_FIRST_FLOOR } from "../config/clouds.js";
 import { formatFloorLabel } from "../ui/HUD.js";
 
@@ -43,6 +44,7 @@ const ERASE_STEP_DISTANCE = 12;
 const REVEAL_CELL_SIZE = 40;
 const REVEAL_THRESHOLD = 0.99;
 const DIRT_FADE_DURATION = 300;
+const SWEEP_TIME_CONSTANT = 100;
 
 const WALL_TILE_HEIGHT = 384;
 const SEGMENT_SPACING = WALL_TILE_HEIGHT * 2;
@@ -413,11 +415,13 @@ export class HouseCleanScene extends Phaser.Scene {
 
   buildToolIcon() {
     this.toolIcon = this.createToolIcon(0, 0, 36, { withBorder: false }).setVisible(false).setDepth(1000);
+    this.sweepSmoother = new SweepSmoother({ timeConstant: SWEEP_TIME_CONSTANT });
 
     this.tweens.add({ targets: this.toolIcon, scale: 1.2, yoyo: true, repeat: -1, duration: 220 });
   }
 
   setupSwipeInput() {
+    this.input.on("pointerdown", () => this.sweepSmoother.reset());
     this.input.on("pointermove", (pointer) => this.handlePointerMove(pointer));
     this.input.on("pointerup", () => this.toolIcon.setVisible(false));
   }
@@ -448,10 +452,13 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   rotateToolTowardSweep(pointer) {
-    const rotation = computeSweepRotation({
+    this.sweepSmoother.addSample({
       dx: pointer.x - pointer.prevPosition.x,
       dy: pointer.y - pointer.prevPosition.y,
+      time: pointer.time,
     });
+
+    const rotation = computeSweepRotation(this.sweepSmoother.averageDelta());
 
     if (rotation !== null) {
       this.toolIcon.rotation = rotation;
