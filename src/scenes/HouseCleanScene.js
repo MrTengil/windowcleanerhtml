@@ -480,12 +480,12 @@ export class HouseCleanScene extends Phaser.Scene {
 
   advanceFloor() {
     this.currentFloor += 1;
-    this.animateLiftBounce();
 
     if (this.currentFloor > this.house.floors) {
       this.showLevelComplete();
       return;
     }
+    this.animateLiftBounce();
 
     this.floorText.setText(formatFloorLabel(this.currentFloor, this.house.floors));
     this.playFloorTransition();
