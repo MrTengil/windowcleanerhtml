@@ -6,7 +6,6 @@ const CARD_WIDTH = 300;
 const CARD_HEIGHT = 220;
 const CARD_GAP = 20;
 const GRID_TOP = 260;
-const GRID_CENTER_X = 360;
 
 const DEFAULT_LIFT_ID = "gondola";
 
@@ -16,8 +15,10 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   create() {
+    this.gridCenterX = this.scale.width / 2;
+
     this.add
-      .text(GRID_CENTER_X, 140, "Vertical Shine", {
+      .text(this.gridCenterX, 140, "Vertical Shine", {
         fontSize: "48px",
         color: "#ffffff",
       })
@@ -40,13 +41,13 @@ export class MainMenuScene extends Phaser.Scene {
     }
 
     this.add
-      .text(GRID_CENTER_X, y, "Lift Garage", { fontSize: "24px", color: "#ffffff" })
+      .text(this.gridCenterX, y, "Lift Garage", { fontSize: "24px", color: "#ffffff" })
       .setOrigin(0.5);
 
     const iconSize = 64;
     const gap = 30;
     const totalWidth = LIFTS.length * iconSize + (LIFTS.length - 1) * gap;
-    const startX = GRID_CENTER_X - totalWidth / 2 + iconSize / 2;
+    const startX = this.gridCenterX - totalWidth / 2 + iconSize / 2;
     const iconY = y + 50;
 
     this.liftSelectionBorders = {};
@@ -90,7 +91,7 @@ export class MainMenuScene extends Phaser.Scene {
   createHouseCard(house, index) {
     const column = index % 2;
     const row = Math.floor(index / 2);
-    const x = GRID_CENTER_X + (column === 0 ? -1 : 1) * (CARD_GAP / 2 + CARD_WIDTH / 2);
+    const x = this.gridCenterX + (column === 0 ? -1 : 1) * (CARD_GAP / 2 + CARD_WIDTH / 2);
     const y = GRID_TOP + row * (CARD_HEIGHT + CARD_GAP) + CARD_HEIGHT / 2;
 
     const card = this.add.rectangle(x, y, CARD_WIDTH, CARD_HEIGHT, house.color, house.enabled ? 1 : 0.35);
@@ -113,13 +114,13 @@ export class MainMenuScene extends Phaser.Scene {
 
   createIconRow({ title, y, items }) {
     this.add
-      .text(GRID_CENTER_X, y, title, { fontSize: "24px", color: "#ffffff" })
+      .text(this.gridCenterX, y, title, { fontSize: "24px", color: "#ffffff" })
       .setOrigin(0.5);
 
     const iconSize = 64;
     const gap = 30;
     const totalWidth = items.length * iconSize + (items.length - 1) * gap;
-    const startX = GRID_CENTER_X - totalWidth / 2 + iconSize / 2;
+    const startX = this.gridCenterX - totalWidth / 2 + iconSize / 2;
     const iconY = y + 50;
 
     items.forEach((item, index) => {
