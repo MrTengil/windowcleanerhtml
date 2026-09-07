@@ -53,9 +53,6 @@ const PROGRESS_BAR_Y = 80;
 const PROGRESS_BAR_WIDTH = 400;
 const PROGRESS_BAR_HEIGHT = 16;
 
-const LIFT_BOUNCE_CYCLES = 4;
-const LIFT_BOUNCE_DAMPING = 0.5;
-
 const ROPE_TOP_OVERSHOOT = 60;
 const LIFT_PLATFORM_SPECS = {
   gondola: {
@@ -326,21 +323,15 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   animateLiftBounce() {
+    const dropAmplitude = Phaser.Math.Between(30, 50);
+    const settleAmplitude = Phaser.Math.Between(6, 14);
+    const dropDuration = Phaser.Math.Between(300, 400);
+    const settleDuration = Phaser.Math.Between(150, 200);
+
     const tweens = [
-      { y: this.liftBaseY + 40, duration: 350, ease: "Sine.easeOut", yoyo: true },
-      { y: this.liftBaseY - 10, duration: 175, ease: "Sine.easeOut", yoyo: true },
+      { y: this.liftBaseY + dropAmplitude, duration: dropDuration, ease: "Sine.easeOut", yoyo: true },
+      { y: this.liftBaseY - settleAmplitude, duration: settleDuration, ease: "Sine.easeOut", yoyo: true },
     ];
-
-    let xAmplitude = 4;
-
-    for (let cycle = 0; cycle < LIFT_BOUNCE_CYCLES; cycle++) {
-      tweens.push(
-        { x: this.liftBaseX + xAmplitude, duration: 400, ease: "Sine.easeOut", yoyo: true },
-        { x: this.liftBaseX - xAmplitude / 2, duration: 400, ease: "Sine.easeOut", yoyo: true },
-      );
-
-      xAmplitude *= LIFT_BOUNCE_DAMPING;
-    }
 
     this.tweens.chain({ targets: this.liftContainer, tweens });
   }
