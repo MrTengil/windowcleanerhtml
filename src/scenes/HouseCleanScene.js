@@ -41,6 +41,7 @@ const BRUSH_RADIUS = 100;
 const ERASE_STEP_DISTANCE = 12;
 const REVEAL_CELL_SIZE = 40;
 const REVEAL_THRESHOLD = 0.99;
+const DIRT_FADE_DURATION = 300;
 
 const WALL_TILE_HEIGHT = 384;
 const SEGMENT_SPACING = WALL_TILE_HEIGHT * 2;
@@ -473,8 +474,17 @@ export class HouseCleanScene extends Phaser.Scene {
 
     if (!this.floorComplete && this.revealTracker.isFullyRevealed(REVEAL_THRESHOLD)) {
       this.floorComplete = true;
-      this.time.delayedCall(300, () => this.advanceFloor());
+      this.fadeOutRemainingDirt();
     }
+  }
+
+  fadeOutRemainingDirt() {
+    this.tweens.add({
+      targets: this.dirtMask,
+      alpha: 0,
+      duration: DIRT_FADE_DURATION,
+      onComplete: () => this.advanceFloor(),
+    });
   }
 
   advanceFloor() {
