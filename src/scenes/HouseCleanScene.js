@@ -5,6 +5,7 @@ import { LIFTS } from "../config/lifts.js";
 import { RevealTracker } from "../interactions/RevealTracker.js";
 import { segmentWorldY, hasScrolledOutOfView } from "../utils/worldScroll.js";
 import { createCloudSpec } from "../utils/cloudSpec.js";
+import { computeSweepRotation } from "../utils/sweepRotation.js";
 import { CLOUDS, CLOUD_FIRST_FLOOR } from "../config/clouds.js";
 import { formatFloorLabel } from "../ui/HUD.js";
 
@@ -435,11 +436,26 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
+    if (this.equippedTool.rotatesWithSweep) {
+      this.rotateToolTowardSweep(pointer);
+    }
+
     const from = this.toWindowLocal(pointer.prevPosition.x, pointer.prevPosition.y);
     const to = this.toWindowLocal(pointer.x, pointer.y);
 
     this.eraseAlongPath(from, to);
     this.updateRevealProgress();
+  }
+
+  rotateToolTowardSweep(pointer) {
+    const rotation = computeSweepRotation({
+      dx: pointer.x - pointer.prevPosition.x,
+      dy: pointer.y - pointer.prevPosition.y,
+    });
+
+    if (rotation !== null) {
+      this.toolIcon.rotation = rotation;
+    }
   }
 
   isInsideWindow(pointer) {
