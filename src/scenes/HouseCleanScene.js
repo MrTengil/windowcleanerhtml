@@ -75,11 +75,13 @@ const LIFT_PLATFORM_SPECS = {
     ropeWidth: 12,
     ropeAnchorsX: [95, 425],
     ropeBehindPlatform: true,
-    bucketAnchor: { x: 95, y: 190 },
+    bucketAnchor: { x: 95, y: 120 },
   },
 };
 
-const BUCKET_DISPLAY_WIDTH = 90;
+const BUCKET_BASE_WIDTH = 90;
+const BUCKET_SCALE = 2;
+const BUCKET_DISPLAY_WIDTH = BUCKET_BASE_WIDTH * BUCKET_SCALE;
 const BUCKET_NATIVE_ASPECT = 220 / 200;
 const BUCKET_ORIGIN_Y = 0.1;
 
