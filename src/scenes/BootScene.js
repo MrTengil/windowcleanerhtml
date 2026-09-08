@@ -16,6 +16,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image("lift-hanging-board", "assets/images/lift/hanging_board.svg");
     this.load.image("lift-rope-cable", "assets/images/lift/rope_cable_tile.svg");
     this.load.image("lift-rope-tan", "assets/images/lift/rope_tan_tile.svg");
+    this.load.image("lift-bucket", "assets/images/lift/bucket.svg");
 
     CLOUDS.forEach((cloud) => {
       this.load.image(cloud.textureKey, `assets/images/clouds/${cloud.file}`);

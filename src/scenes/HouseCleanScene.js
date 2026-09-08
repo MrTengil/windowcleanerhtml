@@ -65,6 +65,7 @@ const LIFT_PLATFORM_SPECS = {
     ropeWidth: 10,
     ropeAnchorsX: [160, 480],
     ropeBehindPlatform: true,
+    bucketAnchor: { x: 160, y: 88 },
   },
   "hanging-board": {
     nativeWidth: 520,
@@ -74,8 +75,13 @@ const LIFT_PLATFORM_SPECS = {
     ropeWidth: 12,
     ropeAnchorsX: [95, 425],
     ropeBehindPlatform: true,
+    bucketAnchor: { x: 95, y: 190 },
   },
 };
+
+const BUCKET_DISPLAY_WIDTH = 90;
+const BUCKET_NATIVE_ASPECT = 220 / 200;
+const BUCKET_ORIGIN_Y = 0.1;
 
 export class HouseCleanScene extends Phaser.Scene {
   constructor() {
@@ -332,6 +338,23 @@ export class HouseCleanScene extends Phaser.Scene {
     } else {
       this.liftContainer.add([platform, ...ropes]);
     }
+
+    this.buildBucket(spec, scaleFactor, platformTopY);
+  }
+
+  buildBucket(spec, scaleFactor, platformTopY) {
+    const anchorX = -spec.displayWidth / 2 + spec.bucketAnchor.x * scaleFactor;
+    const anchorY = platformTopY + spec.bucketAnchor.y * scaleFactor;
+    const bucketDisplayHeight = BUCKET_DISPLAY_WIDTH * BUCKET_NATIVE_ASPECT;
+
+    this.bucketImage = this.add
+      .image(anchorX, anchorY, "lift-bucket")
+      .setDisplaySize(BUCKET_DISPLAY_WIDTH, bucketDisplayHeight)
+      .setOrigin(0.5, BUCKET_ORIGIN_Y);
+
+    // Added last so it renders on top regardless of each lift's own
+    // ropeBehindPlatform ordering.
+    this.liftContainer.add(this.bucketImage);
   }
 
   animateLiftBounce() {
@@ -346,6 +369,24 @@ export class HouseCleanScene extends Phaser.Scene {
     ];
 
     this.tweens.chain({ targets: this.liftContainer, tweens });
+  }
+
+  animateBucketSwing() {
+    if (!this.bucketImage) {
+      return;
+    }
+
+    const swingAmplitude = Phaser.Math.FloatBetween(0.2, 0.35);
+    const settleAmplitude = Phaser.Math.FloatBetween(0.03, 0.08);
+    const swingDuration = Phaser.Math.Between(300, 400);
+    const settleDuration = Phaser.Math.Between(150, 200);
+
+    const tweens = [
+      { rotation: swingAmplitude, duration: swingDuration, ease: "Sine.easeOut", yoyo: true },
+      { rotation: -settleAmplitude, duration: settleDuration, ease: "Sine.easeOut", yoyo: true },
+    ];
+
+    this.tweens.chain({ targets: this.bucketImage, tweens });
   }
 
   spawnFloorSegment(floor) {
@@ -518,6 +559,7 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
     this.animateLiftBounce();
+    this.animateBucketSwing();
 
     this.floorText.setText(formatFloorLabel(this.currentFloor, this.house.floors));
     this.playFloorTransition();
