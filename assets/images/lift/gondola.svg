@@ -97,13 +97,6 @@
     </g>
   </g>
 
-  <!-- ===== Bucket hanging on the left rail ===== -->
-  <g>
-    <path d="M148 258 L172 258 L168 288 L152 288 Z" fill="url(#bucketGrad)" stroke="#9AA0A4" stroke-width="2"/>
-    <path d="M148 258 Q160 250 172 258" fill="none" stroke="#9AA0A4" stroke-width="2"/>
-    <path d="M152 258 Q160 240 168 258" fill="none" stroke="#B4890F" stroke-width="3"/>
-  </g>
-
   <!-- Coiled hose for detail -->
   <g fill="none" stroke="#E0A62E" stroke-width="4">
     <circle cx="240" cy="272" r="10"/>
