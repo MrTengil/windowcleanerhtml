@@ -475,7 +475,7 @@ export class HouseCleanScene extends Phaser.Scene {
   refreshDraggingToolIcon() {
     this.toolIcon?.destroy();
 
-    this.toolIcon = this.createToolIcon(this.equippedTool, 0, 0, 36, { withBorder: false })
+    this.toolIcon = this.createToolIcon(this.equippedTool, 0, 0, BRUSH_RADIUS * 2, { withBorder: false })
       .setVisible(false)
       .setDepth(1000);
   }
