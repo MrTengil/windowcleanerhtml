@@ -478,8 +478,6 @@ export class HouseCleanScene extends Phaser.Scene {
     this.toolIcon = this.createToolIcon(this.equippedTool, 0, 0, 36, { withBorder: false })
       .setVisible(false)
       .setDepth(1000);
-
-    this.tweens.add({ targets: this.toolIcon, scale: 1.2, yoyo: true, repeat: -1, duration: 220 });
   }
 
   openToolSelector() {
