@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 130" width="160" height="130">
+  <!-- Bird poop dirt/grime marker -->
+  <g fill="#F4F4EC" stroke="#C9C9B8" stroke-width="4" stroke-linejoin="round">
+    <path d="M50 30 Q40 10 60 8 Q80 4 82 22 Q100 18 100 38 Q118 40 112 58 Q126 66 112 80
+             Q118 96 98 96 Q94 112 74 106 Q60 118 46 104 Q26 108 30 88 Q14 84 22 66
+             Q10 54 26 44 Q26 28 50 30 Z"/>
+  </g>
+  <!-- drip -->
+  <path d="M70 96 Q66 112 72 122 Q78 112 76 96 Z" fill="#F4F4EC" stroke="#C9C9B8" stroke-width="4"/>
+  <!-- subtle shading blobs -->
+  <g fill="#E3E3D4" opacity="0.7">
+    <ellipse cx="55" cy="45" rx="14" ry="10"/>
+    <ellipse cx="90" cy="60" rx="16" ry="11"/>
+    <ellipse cx="65" cy="80" rx="12" ry="9"/>
+  </g>
+</svg>

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 230" width="200" height="230">
+  <!-- Grimy handprint smudge — reworked to look smeared/wiped rather than a
+       clean sticker: blurred edges, dragged streak tails, overlapping
+       translucent passes of varying opacity. -->
+  <defs>
+    <filter id="smudge" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+    <filter id="smudgeSoft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+  </defs>
+
+  <!-- soft outer smear pass (very diffuse, wider than the print itself) -->
+  <g fill="#5C4A3A" opacity="0.18" filter="url(#smudgeSoft)">
+    <ellipse cx="102" cy="150" rx="66" ry="80"/>
+  </g>
+
+  <!-- main handprint shape, blurred so edges read as smudged rather than crisp -->
+  <g fill="#5C4A3A" opacity="0.42" filter="url(#smudge)">
+    <ellipse cx="100" cy="152" rx="44" ry="54"/>
+    <path d="M58 128 Q34 108 42 82 Q50 62 68 74 Q72 96 68 122 Z"/>
+    <path d="M72 98 Q66 60 80 30 Q92 20 94 38 Q92 68 88 102 Z"/>
+    <path d="M98 94 Q96 48 110 22 Q122 14 122 34 Q118 64 114 98 Z"/>
+    <path d="M124 98 Q126 54 138 32 Q150 26 148 44 Q140 72 134 102 Z"/>
+    <path d="M148 106 Q154 76 166 60 Q176 58 172 76 Q162 96 154 114 Z"/>
+  </g>
+
+  <!-- dragged smear streaks trailing below, as if the hand slid while pressing -->
+  <g stroke="#5C4A3A" fill="none" stroke-linecap="round" opacity="0.3" filter="url(#smudge)">
+    <path d="M70 190 Q66 208 74 222" stroke-width="14"/>
+    <path d="M100 196 Q98 212 104 226" stroke-width="16"/>
+    <path d="M130 190 Q134 206 128 220" stroke-width="13"/>
+  </g>
+
+  <!-- a couple of streaky wipe marks off to the side, like a partial second pass -->
+  <g stroke="#5C4A3A" fill="none" stroke-linecap="round" opacity="0.2" filter="url(#smudge)">
+    <path d="M40 160 Q20 150 14 130" stroke-width="12"/>
+    <path d="M160 150 Q180 145 188 128" stroke-width="10"/>
+  </g>
+
+  <!-- a few slightly darker patches where grime is thicker (palm heel, fingertips) -->
+  <g fill="#4A3B2E" opacity="0.35" filter="url(#smudge)">
+    <ellipse cx="92" cy="172" rx="18" ry="12"/>
+    <ellipse cx="82" cy="36" rx="8" ry="10"/>
+    <ellipse cx="108" cy="28" rx="8" ry="10"/>
+    <ellipse cx="134" cy="38" rx="8" ry="9"/>
+  </g>
+</svg>
