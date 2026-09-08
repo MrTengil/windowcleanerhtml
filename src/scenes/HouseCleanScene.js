@@ -73,7 +73,7 @@ const LIFT_PLATFORM_SPECS = {
     ropeAnchorY: 15,
     ropeWidth: 12,
     ropeAnchorsX: [95, 425],
-    ropeBehindPlatform: false,
+    ropeBehindPlatform: true,
   },
 };
 
