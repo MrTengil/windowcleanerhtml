@@ -11,6 +11,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image("brick-town-roof", "assets/images/brick-town/brick_roof.svg");
     this.load.image("brick-town-skyline", "assets/images/brick-town/skyline_background.svg");
     this.load.image("squeegee", "assets/images/tools/squeegee.svg");
+    this.load.image("screwdriver", "assets/images/tools/screwdriver.svg");
 
     this.load.image("lift-gondola", "assets/images/lift/gondola.svg");
     this.load.image("lift-hanging-board", "assets/images/lift/hanging_board.svg");

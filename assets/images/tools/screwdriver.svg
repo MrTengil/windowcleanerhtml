@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 280" width="90" height="280">
+  <!-- Screwdriver — rebuilt straight/symmetric (centered on x=45), Phillips
+       tip to match the Phillips screw assets, blue handle to match the
+       squeegee/toolbelt color palette. -->
+  <defs>
+    <linearGradient id="handleGrad3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#5B8DEF"/>
+      <stop offset="45%" stop-color="#3E6FD9"/>
+      <stop offset="100%" stop-color="#2A55B8"/>
+    </linearGradient>
+    <linearGradient id="shaftGrad4" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8A929A"/>
+      <stop offset="45%" stop-color="#E8ECF2"/>
+      <stop offset="100%" stop-color="#8A929A"/>
+    </linearGradient>
+  </defs>
+  <g stroke="#1A1208" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <!-- handle -->
+    <path d="M17 176 Q9 208 17 252 Q28 270 45 270 Q62 270 73 252 Q81 208 73 176 Z" fill="url(#handleGrad3)"/>
+    <!-- grip ridges -->
+    <g stroke="#1E3E8F" stroke-width="4" opacity="0.55">
+      <line x1="15" y1="198" x2="75" y2="198"/>
+      <line x1="14" y1="218" x2="76" y2="218"/>
+      <line x1="16" y1="238" x2="74" y2="238"/>
+    </g>
+    <!-- end cap highlight -->
+    <ellipse cx="45" cy="264" rx="14" ry="6" fill="#1E3E8F" opacity="0.5" stroke="none"/>
+    <!-- ferrule -->
+    <rect x="29" y="156" width="32" height="24" rx="4" fill="#6B7178"/>
+    <!-- shaft, straight and symmetric about x=45 -->
+    <rect x="38" y="26" width="14" height="130" fill="url(#shaftGrad4)"/>
+    <!-- phillips tip -->
+    <path d="M38 26 L52 26 L48 8 L42 8 Z" fill="url(#shaftGrad4)"/>
+  </g>
+  <!-- tip cross slot detail -->
+  <g stroke="#5C636A" stroke-width="2.5">
+    <line x1="45" y1="10" x2="45" y2="24"/>
+  </g>
+  <!-- shaft highlight -->
+  <rect x="41" y="26" width="3" height="128" fill="#FFFFFF" opacity="0.5"/>
+</svg>
