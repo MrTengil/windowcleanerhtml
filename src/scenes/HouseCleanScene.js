@@ -7,6 +7,7 @@ import { segmentWorldY, hasScrolledOutOfView } from "../utils/worldScroll.js";
 import { createCloudSpec } from "../utils/cloudSpec.js";
 import { computeSweepRotation } from "../utils/sweepRotation.js";
 import { SweepSmoother } from "../interactions/SweepSmoother.js";
+import { ScrewProgress } from "../interactions/ScrewProgress.js";
 import { CLOUDS, CLOUD_FIRST_FLOOR } from "../config/clouds.js";
 import { formatFloorLabel } from "../ui/HUD.js";
 
@@ -17,6 +18,21 @@ const WINDOW_WIDTH = 420;
 const WINDOW_HEIGHT = 520;
 const WINDOW_OFFSET_X = 0;
 const WINDOW_TOP = WINDOW_Y - WINDOW_HEIGHT / 2;
+
+const BOARD_EDGE_WIDTH = 50;
+const BOARD_MIDDLE_NATIVE_HEIGHT = 100;
+const BOARD_SCREW_NATIVE_OFFSET_X = 2;
+const BOARD_HINGE_ROTATION = 1.3;
+const BOARD_HINGE_DURATION = 400;
+const BOARD_FALL_DURATION = 500;
+const BOARD_FALL_DISTANCE = CANVAS_HEIGHT;
+
+const SCREW_DISPLAY_SIZE = 70;
+const SCREW_HIT_RADIUS = 70;
+const SCREW_PROGRESS_RADIUS = 50;
+const SCREW_PROGRESS_STROKE = 6;
+const SCREW_PROGRESS_COLOR = 0x4caf50;
+const UNSCREW_TARGET_ROTATION = Math.PI * 4;
 
 const HUD_RIGHT_MARGIN = 40;
 
@@ -437,7 +453,9 @@ export class HouseCleanScene extends Phaser.Scene {
       container.add(this.add.image(0, ROOF_Y - WINDOW_Y, this.house.roofTextureKey));
     }
 
-    const segment = { container, dirtMask, worldY, floor };
+    const obstruction = this.buildBoardObstruction(container);
+
+    const segment = { container, dirtMask, worldY, floor, obstruction };
     this.segments.push(segment);
 
     return segment;
@@ -447,8 +465,49 @@ export class HouseCleanScene extends Phaser.Scene {
     this.dirtMask = segment.dirtMask;
     this.revealTracker = new RevealTracker({ width: WINDOW_WIDTH, height: WINDOW_HEIGHT, cellSize: REVEAL_CELL_SIZE });
     this.floorComplete = false;
+    this.activeObstruction = segment.obstruction;
 
     this.drawProgressBar(0);
+  }
+
+  buildBoardObstruction(container) {
+    const middleWidth = WINDOW_WIDTH - BOARD_EDGE_WIDTH * 2;
+    const tileScaleY = WINDOW_HEIGHT / BOARD_MIDDLE_NATIVE_HEIGHT;
+    const edgeLeftX = -WINDOW_WIDTH / 2 + BOARD_EDGE_WIDTH / 2;
+    const edgeRightX = WINDOW_WIDTH / 2 - BOARD_EDGE_WIDTH / 2;
+
+    const leftEdge = this.add.image(edgeLeftX, 0, "board-edge").setDisplaySize(BOARD_EDGE_WIDTH, WINDOW_HEIGHT);
+    const middle = this.add
+      .tileSprite(0, 0, middleWidth, WINDOW_HEIGHT, "board-middle")
+      .setTileScale(1, tileScaleY);
+    const rightEdge = this.add
+      .image(edgeRightX, 0, "board-edge")
+      .setDisplaySize(BOARD_EDGE_WIDTH, WINDOW_HEIGHT)
+      .setFlipX(true);
+
+    const boardPlank = this.add.container(0, 0, [leftEdge, middle, rightEdge]);
+    container.add(boardPlank);
+
+    const screws = [
+      this.buildScrew(container, edgeLeftX + BOARD_SCREW_NATIVE_OFFSET_X),
+      this.buildScrew(container, edgeRightX - BOARD_SCREW_NATIVE_OFFSET_X),
+    ];
+
+    return { boardPlank, screws, cleared: false };
+  }
+
+  buildScrew(container, x) {
+    const image = this.add.image(x, 0, "screw-front").setDisplaySize(SCREW_DISPLAY_SIZE, SCREW_DISPLAY_SIZE);
+    const progressGraphics = this.add.graphics().setPosition(x, 0);
+
+    container.add([image, progressGraphics]);
+
+    return {
+      image,
+      progressGraphics,
+      progress: new ScrewProgress({ targetRotation: UNSCREW_TARGET_ROTATION }),
+      done: false,
+    };
   }
 
   cullScrolledSegments() {
@@ -550,7 +609,10 @@ export class HouseCleanScene extends Phaser.Scene {
   setupSwipeInput() {
     this.input.on("pointerdown", () => this.sweepSmoother.reset());
     this.input.on("pointermove", (pointer) => this.handlePointerMove(pointer));
-    this.input.on("pointerup", () => this.toolIcon.setVisible(false));
+    this.input.on("pointerup", () => {
+      this.toolIcon.setVisible(false);
+      this.activeObstruction?.screws.forEach((screw) => screw.progress.release());
+    });
   }
 
   handlePointerMove(pointer) {
@@ -567,6 +629,11 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
+    if (this.activeObstruction) {
+      this.handleObstructionPointerMove(pointer);
+      return;
+    }
+
     if (this.equippedTool.rotatesWithSweep) {
       this.rotateToolTowardSweep(pointer);
     }
@@ -576,6 +643,104 @@ export class HouseCleanScene extends Phaser.Scene {
 
     this.eraseAlongPath(from, to);
     this.updateRevealProgress();
+  }
+
+  handleObstructionPointerMove(pointer) {
+    if (this.equippedTool.id !== "screwdriver") {
+      return;
+    }
+
+    for (const screw of this.activeObstruction.screws) {
+      if (screw.done) {
+        continue;
+      }
+
+      const screwWorldX = this.windowCenterX + screw.image.x;
+      const screwWorldY = WINDOW_Y + screw.image.y;
+      const distance = Phaser.Math.Distance.Between(pointer.x, pointer.y, screwWorldX, screwWorldY);
+
+      if (distance > SCREW_HIT_RADIUS) {
+        screw.progress.release();
+        continue;
+      }
+
+      const angle = Math.atan2(pointer.y - screwWorldY, pointer.x - screwWorldX);
+
+      screw.progress.trackAngle(angle);
+      this.updateScrewVisuals(screw);
+
+      if (screw.progress.isComplete()) {
+        this.completeScrew(screw);
+      }
+    }
+  }
+
+  updateScrewVisuals(screw) {
+    const fraction = screw.progress.progressFraction();
+
+    screw.image.rotation = -screw.progress.rotationProgress;
+
+    screw.progressGraphics.clear();
+    screw.progressGraphics.lineStyle(SCREW_PROGRESS_STROKE, SCREW_PROGRESS_COLOR, 1);
+    screw.progressGraphics.beginPath();
+    screw.progressGraphics.arc(0, 0, SCREW_PROGRESS_RADIUS, -Math.PI / 2, -Math.PI / 2 - fraction * Math.PI * 2, true);
+    screw.progressGraphics.strokePath();
+  }
+
+  completeScrew(screw) {
+    const obstruction = this.activeObstruction;
+
+    screw.done = true;
+    screw.image.setVisible(false);
+    screw.progressGraphics.setVisible(false);
+
+    const remainingScrew = obstruction.screws.find((candidate) => !candidate.done);
+
+    if (remainingScrew) {
+      this.pivotBoardPlank(obstruction.boardPlank, remainingScrew);
+      this.animateBoardHinge(obstruction.boardPlank);
+    } else {
+      this.animateBoardFall(obstruction);
+    }
+  }
+
+  pivotBoardPlank(boardPlank, remainingScrew) {
+    const dx = remainingScrew.image.x - boardPlank.x;
+    const dy = remainingScrew.image.y - boardPlank.y;
+
+    boardPlank.x = remainingScrew.image.x;
+    boardPlank.y = remainingScrew.image.y;
+
+    boardPlank.list.forEach((child) => {
+      child.x -= dx;
+      child.y -= dy;
+    });
+  }
+
+  animateBoardHinge(boardPlank) {
+    this.tweens.add({
+      targets: boardPlank,
+      rotation: BOARD_HINGE_ROTATION,
+      duration: BOARD_HINGE_DURATION,
+      ease: "Back.easeOut",
+    });
+  }
+
+  animateBoardFall(obstruction) {
+    this.tweens.killTweensOf(obstruction.boardPlank);
+
+    this.tweens.add({
+      targets: obstruction.boardPlank,
+      y: obstruction.boardPlank.y + BOARD_FALL_DISTANCE,
+      rotation: obstruction.boardPlank.rotation + BOARD_HINGE_ROTATION,
+      duration: BOARD_FALL_DURATION,
+      ease: "Cubic.easeIn",
+      onComplete: () => {
+        obstruction.boardPlank.destroy();
+        obstruction.cleared = true;
+        this.activeObstruction = null;
+      },
+    });
   }
 
   rotateToolTowardSweep(pointer) {
@@ -622,7 +787,7 @@ export class HouseCleanScene extends Phaser.Scene {
   updateRevealProgress() {
     this.drawProgressBar(this.revealTracker.revealedFraction());
 
-    if (!this.floorComplete && this.revealTracker.isFullyRevealed(REVEAL_THRESHOLD)) {
+    if (!this.floorComplete && this.revealTracker.isFullyRevealed(REVEAL_THRESHOLD) && !this.activeObstruction) {
       this.floorComplete = true;
       this.fadeOutRemainingDirt();
     }

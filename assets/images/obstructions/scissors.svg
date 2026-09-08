@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Scissors — rebuilt for clarity: two straight-edged pointed blades
+       crossing in an X above the pivot, two arms leading down to clear
+       ring-shaped handles below. -->
+  <defs>
+    <linearGradient id="bladeGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F0F3F6"/>
+      <stop offset="100%" stop-color="#AEB6BF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- blades (drawn first, behind the pivot/arms) -->
+  <g stroke="#1A1208" stroke-width="5" stroke-linejoin="round" fill="url(#bladeGrad2)">
+    <polygon points="100,104 178,26 190,34 108,116"/>
+    <polygon points="100,104 22,26 10,34 92,116"/>
+  </g>
+
+  <!-- arms from pivot down to each handle ring -->
+  <g stroke="#1A1208" stroke-width="5" stroke-linecap="round">
+    <line x1="100" y1="104" x2="142" y2="150" stroke="#F5B93C" stroke-width="16"/>
+    <line x1="100" y1="104" x2="58" y2="150" stroke="#F5B93C" stroke-width="16"/>
+  </g>
+
+  <!-- handle rings -->
+  <g fill="none" stroke="#1A1208" stroke-width="5">
+    <circle cx="150" cy="164" r="24" fill="#F5B93C"/>
+    <circle cx="50" cy="164" r="24" fill="#F5B93C"/>
+  </g>
+  <circle cx="150" cy="164" r="12" fill="#FFFFFF"/>
+  <circle cx="50" cy="164" r="12" fill="#FFFFFF"/>
+
+  <!-- pivot screw, drawn last so it sits on top of blades and arms -->
+  <circle cx="100" cy="104" r="10" fill="#8A929A" stroke="#1A1208" stroke-width="5"/>
+</svg>

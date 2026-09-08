@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 150" width="60" height="150">
+  <!-- Screw, side profile — rebuilt with a straight, symmetric shaft (centered on x=30) instead of the crooked/lopsided version -->
+  <defs>
+    <linearGradient id="shaftGrad3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8A929A"/>
+      <stop offset="45%" stop-color="#E8ECF2"/>
+      <stop offset="100%" stop-color="#8A929A"/>
+    </linearGradient>
+  </defs>
+  <g stroke="#1A1208" stroke-width="5" stroke-linejoin="round">
+    <!-- flat head -->
+    <rect x="12" y="8" width="36" height="14" rx="3" fill="url(#shaftGrad3)"/>
+    <!-- slot -->
+    <rect x="20" y="12" width="20" height="5" rx="1.5" fill="#3A3F45" stroke="none"/>
+    <!-- tapered shaft, symmetric about x=30 -->
+    <path d="M18 22 L42 22 L36 128 L24 128 Z" fill="url(#shaftGrad3)"/>
+    <!-- pointed tip -->
+    <path d="M24 128 L36 128 L30 144 Z" fill="url(#shaftGrad3)"/>
+  </g>
+  <!-- thread ridges, symmetric, evenly spaced -->
+  <g stroke="#5C636A" stroke-width="3">
+    <path d="M19 34 Q30 30 41 34" fill="none"/>
+    <path d="M18.5 48 Q30 44 41.5 48" fill="none"/>
+    <path d="M18 62 Q30 58 42 62" fill="none"/>
+    <path d="M17.5 76 Q30 72 42.5 76" fill="none"/>
+    <path d="M17 90 Q30 86 43 90" fill="none"/>
+    <path d="M26 104 Q30 101 34 104" fill="none"/>
+    <path d="M27 116 Q30 113.5 33 116" fill="none"/>
+  </g>
+</svg>

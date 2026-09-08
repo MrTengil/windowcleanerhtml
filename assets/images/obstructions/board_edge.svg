@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 100" width="50" height="100">
+  <!-- Board END CAP piece — place one at each end of a run of tiled board_middle pieces. Full outline on all sides since this is a terminal piece. -->
+  <defs>
+    <linearGradient id="woodGradEdge" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#9C6B3E"/>
+      <stop offset="100%" stop-color="#7A5236"/>
+    </linearGradient>
+  </defs>
+  <path d="M50 4 L20 4 Q4 4 4 20 L4 80 Q4 96 20 96 L50 96 Z"
+        fill="url(#woodGradEdge)" stroke="#1A1208" stroke-width="6" stroke-linejoin="round"/>
+  <!-- wood grain -->
+  <g stroke="#5A3A24" stroke-width="3" opacity="0.6" fill="none">
+    <path d="M50 25 Q26 20 14 30"/>
+    <path d="M50 50 Q22 46 10 54"/>
+    <path d="M50 75 Q26 70 14 80"/>
+  </g>
+  <!-- rough splintered end, contained within the piece -->
+  <g fill="#5A3A24">
+    <polygon points="6,18 10,10 14,20"/>
+    <polygon points="6,84 12,92 16,82"/>
+  </g>
+  <!-- screw hole -->
+  <circle cx="27" cy="50" r="7" fill="#3E2717" opacity="0.5"/>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Screw, viewed head-on (as if screwed into the board) -->
+  <defs>
+    <radialGradient id="screwHeadGrad" cx="35%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#E8ECF2"/>
+      <stop offset="60%" stop-color="#AEB6BF"/>
+      <stop offset="100%" stop-color="#7C848D"/>
+    </radialGradient>
+  </defs>
+  <circle cx="50" cy="50" r="38" fill="url(#screwHeadGrad)" stroke="#3A3F45" stroke-width="5"/>
+  <!-- phillips cross slot -->
+  <g stroke="#3A3F45" stroke-width="7" stroke-linecap="round">
+    <line x1="50" y1="26" x2="50" y2="74"/>
+    <line x1="26" y1="50" x2="74" y2="50"/>
+  </g>
+  <!-- rim highlight -->
+  <circle cx="50" cy="50" r="38" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.4"/>
+</svg>
