@@ -65,7 +65,7 @@ const LIFT_PLATFORM_SPECS = {
     ropeWidth: 10,
     ropeAnchorsX: [160, 480],
     ropeBehindPlatform: true,
-    bucketAnchor: { x: 160, y: 88 },
+    bucketAnchor: { x: 320, y: 20 },
   },
   "hanging-board": {
     nativeWidth: 520,
@@ -75,7 +75,7 @@ const LIFT_PLATFORM_SPECS = {
     ropeWidth: 12,
     ropeAnchorsX: [95, 425],
     ropeBehindPlatform: true,
-    bucketAnchor: { x: 95, y: 120 },
+    bucketAnchor: { x: 260, y: 120 },
   },
 };
 
