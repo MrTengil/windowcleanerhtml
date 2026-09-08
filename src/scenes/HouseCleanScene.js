@@ -19,6 +19,7 @@ const WINDOW_HEIGHT = 520;
 const WINDOW_OFFSET_X = 0;
 const WINDOW_TOP = WINDOW_Y - WINDOW_HEIGHT / 2;
 
+const BOARD_WIDTH = WINDOW_WIDTH * 0.8;
 const BOARD_EDGE_WIDTH = 50;
 const BOARD_MIDDLE_NATIVE_HEIGHT = 100;
 const BOARD_SCREW_NATIVE_OFFSET_X = 2;
@@ -471,10 +472,10 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildBoardObstruction(container) {
-    const middleWidth = WINDOW_WIDTH - BOARD_EDGE_WIDTH * 2;
+    const middleWidth = BOARD_WIDTH - BOARD_EDGE_WIDTH * 2;
     const tileScaleY = WINDOW_HEIGHT / BOARD_MIDDLE_NATIVE_HEIGHT;
-    const edgeLeftX = -WINDOW_WIDTH / 2 + BOARD_EDGE_WIDTH / 2;
-    const edgeRightX = WINDOW_WIDTH / 2 - BOARD_EDGE_WIDTH / 2;
+    const edgeLeftX = -BOARD_WIDTH / 2 + BOARD_EDGE_WIDTH / 2;
+    const edgeRightX = BOARD_WIDTH / 2 - BOARD_EDGE_WIDTH / 2;
 
     const leftEdge = this.add.image(edgeLeftX, 0, "board-edge").setDisplaySize(BOARD_EDGE_WIDTH, WINDOW_HEIGHT);
     const middle = this.add
