@@ -49,8 +49,6 @@ const TAPE_FALL_DURATION = 500;
 const TAPE_FALL_DISTANCE = CANVAS_HEIGHT;
 const TAPE_MIN_PIECE_WIDTH = 20;
 
-const TAPE_CUT_VERTICAL_TOLERANCE = 60;
-
 const TAPE_FLING_UP_DISTANCE = 50;
 const TAPE_FLING_APART_DISTANCE = 40;
 const TAPE_FLING_DURATION = 180;
@@ -600,6 +598,8 @@ export class HouseCleanScene extends Phaser.Scene {
       edgeRightX,
       cutting: false,
       cleared: false,
+      hasBeenAbove: false,
+      hasBeenBelow: false,
     };
   }
 
@@ -700,12 +700,21 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   setupSwipeInput() {
-    this.input.on("pointerdown", () => this.sweepSmoother.reset());
+    this.input.on("pointerdown", () => this.handlePointerDown());
     this.input.on("pointermove", (pointer) => this.handlePointerMove(pointer));
     this.input.on("pointerup", () => {
       this.toolIcon.setVisible(false);
       this.activeObstruction?.screws?.forEach((screw) => screw.progress.release());
     });
+  }
+
+  handlePointerDown() {
+    this.sweepSmoother.reset();
+
+    if (this.activeObstruction?.type === "police-tape") {
+      this.activeObstruction.hasBeenAbove = false;
+      this.activeObstruction.hasBeenBelow = false;
+    }
   }
 
   handlePointerMove(pointer) {
@@ -787,19 +796,29 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   handleTapeSwipeMove(pointer) {
-    if (this.equippedTool.id !== "scissors" || this.activeObstruction.cutting) {
+    const obstruction = this.activeObstruction;
+
+    if (this.equippedTool.id !== "scissors" || obstruction.cutting) {
       return;
     }
 
     const localX = pointer.x - this.windowCenterX;
     const localY = pointer.y - WINDOW_Y;
+    const tapeHalfHeight = obstruction.rowHeight / 2;
 
-    const withinSpan = Math.abs(localX) <= this.activeObstruction.tapeWidth / 2;
-    const withinBand = Math.abs(localY) <= TAPE_CUT_VERTICAL_TOLERANCE;
+    if (Math.abs(localX) > obstruction.tapeWidth / 2) {
+      return;
+    }
 
-    if (withinSpan && withinBand) {
-      this.activeObstruction.cutting = true;
-      this.completeTapeCut(this.activeObstruction, localX);
+    if (localY < -tapeHalfHeight) {
+      obstruction.hasBeenAbove = true;
+    } else if (localY > tapeHalfHeight) {
+      obstruction.hasBeenBelow = true;
+    }
+
+    if (obstruction.hasBeenAbove && obstruction.hasBeenBelow) {
+      obstruction.cutting = true;
+      this.completeTapeCut(obstruction, localX);
     }
   }
 
