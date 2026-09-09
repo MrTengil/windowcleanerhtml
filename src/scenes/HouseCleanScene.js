@@ -47,14 +47,19 @@ const TAPE_EDGE_NATIVE_WIDTH = 40;
 const TAPE_EDGE_NATIVE_HEIGHT = 70;
 const TAPE_FALL_DURATION = 500;
 const TAPE_FALL_DISTANCE = CANVAS_HEIGHT;
-const TAPE_SPLIT_UP_DISTANCE = 40;
-const TAPE_SPLIT_UP_DURATION = 150;
-const TAPE_SPLIT_APART_DISTANCE = 60;
-const TAPE_SPLIT_APART_DURATION = 200;
+const TAPE_MIN_PIECE_WIDTH = 20;
 
-const CUT_HIT_RADIUS = 90;
-const CUT_MARKER_RADIUS = 50;
-const CUT_MARKER_STROKE = 6;
+const TAPE_CUT_VERTICAL_TOLERANCE = 60;
+
+const TAPE_FLING_UP_DISTANCE = 50;
+const TAPE_FLING_APART_DISTANCE = 40;
+const TAPE_FLING_DURATION = 180;
+const TAPE_FLING_ROTATION_MIN = 0.3;
+const TAPE_FLING_ROTATION_MAX = 0.6;
+
+const TAPE_FALL_APART_DISTANCE = 80;
+const TAPE_FALL_ROTATION_MIN = 1.5 * Math.PI;
+const TAPE_FALL_ROTATION_MAX = 2.5 * Math.PI;
 
 const HUD_RIGHT_MARGIN = 40;
 
@@ -565,46 +570,37 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildPoliceTapeObstruction(container) {
-    // Built as two independent halves from the start, split exactly at the
-    // cut point (x = 0), so there is nothing to "split" at cut time — the
-    // two halves already exist and just animate apart.
     const rowScale = TAPE_EDGE_WIDTH / TAPE_EDGE_NATIVE_WIDTH;
     const rowHeight = TAPE_EDGE_NATIVE_HEIGHT * rowScale;
     const tapeWidth = WINDOW_WIDTH + TAPE_OVERHANG * 2;
     const middleWidth = tapeWidth - TAPE_EDGE_WIDTH * 2;
-    const halfMiddleWidth = middleWidth / 2;
     const edgeLeftX = -tapeWidth / 2 + TAPE_EDGE_WIDTH / 2;
     const edgeRightX = tapeWidth / 2 - TAPE_EDGE_WIDTH / 2;
 
     const leftEdge = this.add.image(edgeLeftX, 0, "police-tape-edge").setDisplaySize(TAPE_EDGE_WIDTH, rowHeight);
-    const leftMiddle = this.add
-      .tileSprite(-halfMiddleWidth / 2, 0, halfMiddleWidth, rowHeight, "police-tape-middle")
-      .setTileScale(rowScale, rowScale);
-    const rightMiddle = this.add
-      .tileSprite(halfMiddleWidth / 2, 0, halfMiddleWidth, rowHeight, "police-tape-middle")
+    const middle = this.add
+      .tileSprite(0, 0, middleWidth, rowHeight, "police-tape-middle")
       .setTileScale(rowScale, rowScale);
     const rightEdge = this.add
       .image(edgeRightX, 0, "police-tape-edge")
       .setDisplaySize(TAPE_EDGE_WIDTH, rowHeight)
       .setFlipX(true);
 
-    const leftHalf = this.add.container(0, 0, [leftEdge, leftMiddle]);
-    const rightHalf = this.add.container(0, 0, [rightMiddle, rightEdge]);
-    container.add([leftHalf, rightHalf]);
+    const tapeContainer = this.add.container(0, 0, [leftEdge, middle, rightEdge]);
+    container.add(tapeContainer);
 
-    const cutPoint = this.buildCutPoint(container, 0, 0);
-
-    return { type: "police-tape", leftHalf, rightHalf, cutPoint, cutting: false, cleared: false };
-  }
-
-  buildCutPoint(container, x, y) {
-    const marker = this.add.graphics().setPosition(x, y);
-    marker.lineStyle(CUT_MARKER_STROKE, 0xffffff, 0.6);
-    marker.strokeCircle(0, 0, CUT_MARKER_RADIUS);
-
-    container.add(marker);
-
-    return { x, y, marker };
+    return {
+      type: "police-tape",
+      tapeContainer,
+      tapeWidth,
+      middleWidth,
+      rowScale,
+      rowHeight,
+      edgeLeftX,
+      edgeRightX,
+      cutting: false,
+      cleared: false,
+    };
   }
 
   cullScrolledSegments() {
@@ -795,14 +791,15 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
-    const cutPoint = this.activeObstruction.cutPoint;
-    const cutWorldX = this.windowCenterX + cutPoint.x;
-    const cutWorldY = WINDOW_Y + cutPoint.y;
-    const distance = Phaser.Math.Distance.Between(pointer.x, pointer.y, cutWorldX, cutWorldY);
+    const localX = pointer.x - this.windowCenterX;
+    const localY = pointer.y - WINDOW_Y;
 
-    if (distance <= CUT_HIT_RADIUS) {
+    const withinSpan = Math.abs(localX) <= this.activeObstruction.tapeWidth / 2;
+    const withinBand = Math.abs(localY) <= TAPE_CUT_VERTICAL_TOLERANCE;
+
+    if (withinSpan && withinBand) {
       this.activeObstruction.cutting = true;
-      this.completeTapeCut(this.activeObstruction);
+      this.completeTapeCut(this.activeObstruction, localX);
     }
   }
 
@@ -899,22 +896,84 @@ export class HouseCleanScene extends Phaser.Scene {
     });
   }
 
-  completeTapeCut(obstruction) {
-    this.animateTapeHalfAway(obstruction, obstruction.leftHalf, -1);
-    this.animateTapeHalfAway(obstruction, obstruction.rightHalf, 1);
+  completeTapeCut(obstruction, cutX) {
+    const clampedCutX = Phaser.Math.Clamp(
+      cutX,
+      -obstruction.middleWidth / 2 + TAPE_MIN_PIECE_WIDTH,
+      obstruction.middleWidth / 2 - TAPE_MIN_PIECE_WIDTH,
+    );
+
+    const { leftHalf, rightHalf } = this.splitTapeAt(obstruction, clampedCutX);
+
+    obstruction.leftHalf = leftHalf;
+    obstruction.rightHalf = rightHalf;
+
+    this.animateTapeHalfAway(obstruction, leftHalf, -1);
+    this.animateTapeHalfAway(obstruction, rightHalf, 1);
+  }
+
+  splitTapeAt(obstruction, cutX) {
+    const parent = obstruction.tapeContainer.parentContainer;
+    const { rowScale, rowHeight, middleWidth, tapeWidth, edgeLeftX, edgeRightX } = obstruction;
+
+    const leftMiddleWidth = cutX + middleWidth / 2;
+    const leftMiddleCenterX = (-middleWidth / 2 + cutX) / 2;
+    const rightMiddleWidth = middleWidth / 2 - cutX;
+    const rightMiddleCenterX = (cutX + middleWidth / 2) / 2;
+
+    const leftEdge = this.add.image(edgeLeftX, 0, "police-tape-edge").setDisplaySize(TAPE_EDGE_WIDTH, rowHeight);
+    const leftMiddle = this.add
+      .tileSprite(leftMiddleCenterX, 0, leftMiddleWidth, rowHeight, "police-tape-middle")
+      .setTileScale(rowScale, rowScale);
+    const rightMiddle = this.add
+      .tileSprite(rightMiddleCenterX, 0, rightMiddleWidth, rowHeight, "police-tape-middle")
+      .setTileScale(rowScale, rowScale);
+    const rightEdge = this.add
+      .image(edgeRightX, 0, "police-tape-edge")
+      .setDisplaySize(TAPE_EDGE_WIDTH, rowHeight)
+      .setFlipX(true);
+
+    // Recenter each half's children on its own visual midpoint so rotating
+    // the container (for the fling) spins around the piece's own center
+    // instead of the window's center — the same offset-compensation trick
+    // pivotBoardPlank uses for the board's hinge.
+    const leftHalf = this.add.container(0, 0, [leftEdge, leftMiddle]);
+    const leftHalfCenterX = (-tapeWidth / 2 + cutX) / 2;
+    leftHalf.list.forEach((child) => (child.x -= leftHalfCenterX));
+    leftHalf.x = leftHalfCenterX;
+
+    const rightHalf = this.add.container(0, 0, [rightMiddle, rightEdge]);
+    const rightHalfCenterX = (cutX + tapeWidth / 2) / 2;
+    rightHalf.list.forEach((child) => (child.x -= rightHalfCenterX));
+    rightHalf.x = rightHalfCenterX;
+
+    parent.add([leftHalf, rightHalf]);
+    obstruction.tapeContainer.destroy();
+
+    return { leftHalf, rightHalf };
   }
 
   animateTapeHalfAway(obstruction, half, direction) {
     const startX = half.x;
     const startY = half.y;
+    const flingRotation = direction * Phaser.Math.FloatBetween(TAPE_FLING_ROTATION_MIN, TAPE_FLING_ROTATION_MAX);
+    const fallRotation =
+      flingRotation + direction * Phaser.Math.FloatBetween(TAPE_FALL_ROTATION_MIN, TAPE_FALL_ROTATION_MAX);
 
     this.tweens.chain({
       targets: half,
       tweens: [
-        { y: startY - TAPE_SPLIT_UP_DISTANCE, duration: TAPE_SPLIT_UP_DURATION, ease: "Sine.easeOut" },
-        { x: startX + direction * TAPE_SPLIT_APART_DISTANCE, duration: TAPE_SPLIT_APART_DURATION, ease: "Sine.easeOut" },
         {
-          y: startY - TAPE_SPLIT_UP_DISTANCE + TAPE_FALL_DISTANCE,
+          x: startX + direction * TAPE_FLING_APART_DISTANCE,
+          y: startY - TAPE_FLING_UP_DISTANCE,
+          rotation: flingRotation,
+          duration: TAPE_FLING_DURATION,
+          ease: "Back.easeOut",
+        },
+        {
+          x: startX + direction * (TAPE_FLING_APART_DISTANCE + TAPE_FALL_APART_DISTANCE),
+          y: startY - TAPE_FLING_UP_DISTANCE + TAPE_FALL_DISTANCE,
+          rotation: fallRotation,
           duration: TAPE_FALL_DURATION,
           ease: "Cubic.easeIn",
           onComplete: () => {
@@ -932,7 +991,6 @@ export class HouseCleanScene extends Phaser.Scene {
     }
 
     obstruction.cleared = true;
-    obstruction.cutPoint.marker.destroy();
     this.activeObstruction = null;
   }
 
