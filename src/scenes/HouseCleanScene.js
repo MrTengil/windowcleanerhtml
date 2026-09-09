@@ -8,6 +8,7 @@ import { createCloudSpec } from "../utils/cloudSpec.js";
 import { computeSweepRotation } from "../utils/sweepRotation.js";
 import { SweepSmoother } from "../interactions/SweepSmoother.js";
 import { ScrewProgress } from "../interactions/ScrewProgress.js";
+import { computeTiltedBoardWidth } from "../utils/boardTilt.js";
 import { CLOUDS, CLOUD_FIRST_FLOOR } from "../config/clouds.js";
 import { formatFloorLabel } from "../ui/HUD.js";
 
@@ -24,6 +25,8 @@ const BOARD_OVERHANG = 80;
 const BOARD_EDGE_NATIVE_WIDTH = 50;
 const BOARD_EDGE_NATIVE_HEIGHT = 100;
 const BOARD_SCREW_NATIVE_OFFSET_X = 2;
+const BOARD_MIN_ANGLE_DEGREES = -15;
+const BOARD_MAX_ANGLE_DEGREES = 15;
 const BOARD_HINGE_ROTATION = 1.3;
 const BOARD_HINGE_DURATION = 400;
 const BOARD_FALL_DURATION = 500;
@@ -481,9 +484,25 @@ export class HouseCleanScene extends Phaser.Scene {
     const rowScale = BOARD_EDGE_WIDTH / BOARD_EDGE_NATIVE_WIDTH;
     const rowHeight = BOARD_EDGE_NATIVE_HEIGHT * rowScale;
     const boardWidth = WINDOW_WIDTH + BOARD_OVERHANG * 2;
-    const middleWidth = boardWidth - BOARD_EDGE_WIDTH * 2;
-    const edgeLeftX = -boardWidth / 2 + BOARD_EDGE_WIDTH / 2;
-    const edgeRightX = boardWidth / 2 - BOARD_EDGE_WIDTH / 2;
+
+    // Flat (unrotated) edge positions — these are where the board's ends
+    // must still land horizontally after tilting, and what the screws
+    // (siblings of boardPlank, so not rotated with it) anchor to.
+    const flatEdgeLeftX = -boardWidth / 2 + BOARD_EDGE_WIDTH / 2;
+    const flatEdgeRightX = boardWidth / 2 - BOARD_EDGE_WIDTH / 2;
+
+    const angle = Phaser.Math.FloatBetween(
+      Phaser.Math.DegToRad(BOARD_MIN_ANGLE_DEGREES),
+      Phaser.Math.DegToRad(BOARD_MAX_ANGLE_DEGREES),
+    );
+
+    // The pieces themselves (local to boardPlank, which gets rotated as a
+    // whole) need to be longer than boardWidth by exactly enough that,
+    // once rotated, their horizontal reach still lands on boardWidth.
+    const tiltedBoardWidth = computeTiltedBoardWidth({ boardWidth, angle });
+    const middleWidth = tiltedBoardWidth - BOARD_EDGE_WIDTH * 2;
+    const edgeLeftX = -tiltedBoardWidth / 2 + BOARD_EDGE_WIDTH / 2;
+    const edgeRightX = tiltedBoardWidth / 2 - BOARD_EDGE_WIDTH / 2;
 
     const leftEdge = this.add.image(edgeLeftX, 0, "board-edge").setDisplaySize(BOARD_EDGE_WIDTH, rowHeight);
     const middle = this.add
@@ -494,20 +513,28 @@ export class HouseCleanScene extends Phaser.Scene {
       .setDisplaySize(BOARD_EDGE_WIDTH, rowHeight)
       .setFlipX(true);
 
-    const boardPlank = this.add.container(0, 0, [leftEdge, middle, rightEdge]);
+    const boardPlank = this.add.container(0, 0, [leftEdge, middle, rightEdge]).setRotation(angle);
     container.add(boardPlank);
 
     const screws = [
-      this.buildScrew(container, edgeLeftX + BOARD_SCREW_NATIVE_OFFSET_X),
-      this.buildScrew(container, edgeRightX - BOARD_SCREW_NATIVE_OFFSET_X),
+      this.buildScrew(
+        container,
+        flatEdgeLeftX + BOARD_SCREW_NATIVE_OFFSET_X,
+        flatEdgeLeftX * Math.tan(angle),
+      ),
+      this.buildScrew(
+        container,
+        flatEdgeRightX - BOARD_SCREW_NATIVE_OFFSET_X,
+        flatEdgeRightX * Math.tan(angle),
+      ),
     ];
 
     return { boardPlank, screws, cleared: false };
   }
 
-  buildScrew(container, x) {
-    const image = this.add.image(x, 0, "screw-front").setDisplaySize(SCREW_DISPLAY_SIZE, SCREW_DISPLAY_SIZE);
-    const progressGraphics = this.add.graphics().setPosition(x, 0);
+  buildScrew(container, x, y) {
+    const image = this.add.image(x, y, "screw-front").setDisplaySize(SCREW_DISPLAY_SIZE, SCREW_DISPLAY_SIZE);
+    const progressGraphics = this.add.graphics().setPosition(x, y);
 
     container.add([image, progressGraphics]);
 
