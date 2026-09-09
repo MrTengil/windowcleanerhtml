@@ -20,8 +20,8 @@ const WINDOW_OFFSET_X = 0;
 const WINDOW_TOP = WINDOW_Y - WINDOW_HEIGHT / 2;
 
 const BOARD_EDGE_WIDTH = 30;
-const BOARD_MIDDLE_TILE_SCALE_X = 0.6;
-const BOARD_MIDDLE_NATIVE_HEIGHT = 100;
+const BOARD_EDGE_NATIVE_WIDTH = 50;
+const BOARD_EDGE_NATIVE_HEIGHT = 100;
 const BOARD_SCREW_NATIVE_OFFSET_X = 2;
 const BOARD_HINGE_ROTATION = 1.3;
 const BOARD_HINGE_DURATION = 400;
@@ -474,21 +474,40 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildBoardObstruction(container) {
+    // Uniform scale on every axis — a non-uniform stretch (the old approach,
+    // one row squashed to fill WINDOW_HEIGHT) fattens anything drawn as a
+    // horizontal line in the source art, since a horizontal line's thickness
+    // is a vertical measurement.
+    const rowScale = BOARD_EDGE_WIDTH / BOARD_EDGE_NATIVE_WIDTH;
+    const rowHeight = BOARD_EDGE_NATIVE_HEIGHT * rowScale;
     const middleWidth = WINDOW_WIDTH - BOARD_EDGE_WIDTH * 2;
-    const tileScaleY = WINDOW_HEIGHT / BOARD_MIDDLE_NATIVE_HEIGHT;
     const edgeLeftX = -WINDOW_WIDTH / 2 + BOARD_EDGE_WIDTH / 2;
     const edgeRightX = WINDOW_WIDTH / 2 - BOARD_EDGE_WIDTH / 2;
 
-    const leftEdge = this.add.image(edgeLeftX, 0, "board-edge").setDisplaySize(BOARD_EDGE_WIDTH, WINDOW_HEIGHT);
-    const middle = this.add
-      .tileSprite(0, 0, middleWidth, WINDOW_HEIGHT, "board-middle")
-      .setTileScale(BOARD_MIDDLE_TILE_SCALE_X, tileScaleY);
-    const rightEdge = this.add
-      .image(edgeRightX, 0, "board-edge")
-      .setDisplaySize(BOARD_EDGE_WIDTH, WINDOW_HEIGHT)
-      .setFlipX(true);
+    // Rows stack to (at least) the window's height, deliberately not required
+    // to divide evenly — the overhang past the window's own top/bottom edge
+    // is the point, not a rounding accident. Kept odd so there's always a
+    // true center row for the screws to anchor to.
+    let rowCount = Math.ceil(WINDOW_HEIGHT / rowHeight);
 
-    const boardPlank = this.add.container(0, 0, [leftEdge, middle, rightEdge]);
+    if (rowCount % 2 === 0) {
+      rowCount += 1;
+    }
+
+    const totalHeight = rowCount * rowHeight;
+    const boardPieces = [];
+
+    for (let row = 0; row < rowCount; row++) {
+      const rowY = -totalHeight / 2 + rowHeight / 2 + row * rowHeight;
+
+      boardPieces.push(
+        this.add.image(edgeLeftX, rowY, "board-edge").setDisplaySize(BOARD_EDGE_WIDTH, rowHeight),
+        this.add.tileSprite(0, rowY, middleWidth, rowHeight, "board-middle").setTileScale(rowScale, rowScale),
+        this.add.image(edgeRightX, rowY, "board-edge").setDisplaySize(BOARD_EDGE_WIDTH, rowHeight).setFlipX(true),
+      );
+    }
+
+    const boardPlank = this.add.container(0, 0, boardPieces);
     container.add(boardPlank);
 
     const screws = [
