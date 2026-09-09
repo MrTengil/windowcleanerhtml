@@ -19,8 +19,8 @@ const WINDOW_HEIGHT = 520;
 const WINDOW_OFFSET_X = 0;
 const WINDOW_TOP = WINDOW_Y - WINDOW_HEIGHT / 2;
 
-const BOARD_WIDTH = WINDOW_WIDTH * 0.8;
-const BOARD_EDGE_WIDTH = 50;
+const BOARD_EDGE_WIDTH = 30;
+const BOARD_MIDDLE_TILE_SCALE_X = 0.6;
 const BOARD_MIDDLE_NATIVE_HEIGHT = 100;
 const BOARD_SCREW_NATIVE_OFFSET_X = 2;
 const BOARD_HINGE_ROTATION = 1.3;
@@ -34,6 +34,8 @@ const SCREW_PROGRESS_RADIUS = 50;
 const SCREW_PROGRESS_STROKE = 6;
 const SCREW_PROGRESS_COLOR = 0x4caf50;
 const UNSCREW_TARGET_ROTATION = Math.PI * 4;
+const SCREW_FALL_DISTANCE = 150;
+const SCREW_FALL_DURATION = 350;
 
 const HUD_RIGHT_MARGIN = 40;
 
@@ -472,15 +474,15 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildBoardObstruction(container) {
-    const middleWidth = BOARD_WIDTH - BOARD_EDGE_WIDTH * 2;
+    const middleWidth = WINDOW_WIDTH - BOARD_EDGE_WIDTH * 2;
     const tileScaleY = WINDOW_HEIGHT / BOARD_MIDDLE_NATIVE_HEIGHT;
-    const edgeLeftX = -BOARD_WIDTH / 2 + BOARD_EDGE_WIDTH / 2;
-    const edgeRightX = BOARD_WIDTH / 2 - BOARD_EDGE_WIDTH / 2;
+    const edgeLeftX = -WINDOW_WIDTH / 2 + BOARD_EDGE_WIDTH / 2;
+    const edgeRightX = WINDOW_WIDTH / 2 - BOARD_EDGE_WIDTH / 2;
 
     const leftEdge = this.add.image(edgeLeftX, 0, "board-edge").setDisplaySize(BOARD_EDGE_WIDTH, WINDOW_HEIGHT);
     const middle = this.add
       .tileSprite(0, 0, middleWidth, WINDOW_HEIGHT, "board-middle")
-      .setTileScale(1, tileScaleY);
+      .setTileScale(BOARD_MIDDLE_TILE_SCALE_X, tileScaleY);
     const rightEdge = this.add
       .image(edgeRightX, 0, "board-edge")
       .setDisplaySize(BOARD_EDGE_WIDTH, WINDOW_HEIGHT)
@@ -692,8 +694,8 @@ export class HouseCleanScene extends Phaser.Scene {
     const obstruction = this.activeObstruction;
 
     screw.done = true;
-    screw.image.setVisible(false);
     screw.progressGraphics.setVisible(false);
+    this.animateScrewFall(screw);
 
     const remainingScrew = obstruction.screws.find((candidate) => !candidate.done);
 
@@ -703,6 +705,17 @@ export class HouseCleanScene extends Phaser.Scene {
     } else {
       this.animateBoardFall(obstruction);
     }
+  }
+
+  animateScrewFall(screw) {
+    this.tweens.add({
+      targets: screw.image,
+      y: screw.image.y + SCREW_FALL_DISTANCE,
+      alpha: 0,
+      duration: SCREW_FALL_DURATION,
+      ease: "Cubic.easeIn",
+      onComplete: () => screw.image.setVisible(false),
+    });
   }
 
   pivotBoardPlank(boardPlank, remainingScrew) {
