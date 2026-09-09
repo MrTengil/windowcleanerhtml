@@ -47,12 +47,14 @@ const TAPE_EDGE_NATIVE_WIDTH = 40;
 const TAPE_EDGE_NATIVE_HEIGHT = 70;
 const TAPE_FALL_DURATION = 500;
 const TAPE_FALL_DISTANCE = CANVAS_HEIGHT;
+const TAPE_SPLIT_UP_DISTANCE = 40;
+const TAPE_SPLIT_UP_DURATION = 150;
+const TAPE_SPLIT_APART_DISTANCE = 60;
+const TAPE_SPLIT_APART_DURATION = 200;
 
 const CUT_HIT_RADIUS = 90;
-const CUT_REQUIRED_CLICKS = 3;
-const CUT_PROGRESS_RADIUS = 50;
-const CUT_PROGRESS_STROKE = 6;
-const CUT_PROGRESS_COLOR = 0x4caf50;
+const CUT_MARKER_RADIUS = 50;
+const CUT_MARKER_STROKE = 6;
 
 const HUD_RIGHT_MARGIN = 40;
 
@@ -563,40 +565,46 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildPoliceTapeObstruction(container) {
+    // Built as two independent halves from the start, split exactly at the
+    // cut point (x = 0), so there is nothing to "split" at cut time — the
+    // two halves already exist and just animate apart.
     const rowScale = TAPE_EDGE_WIDTH / TAPE_EDGE_NATIVE_WIDTH;
     const rowHeight = TAPE_EDGE_NATIVE_HEIGHT * rowScale;
     const tapeWidth = WINDOW_WIDTH + TAPE_OVERHANG * 2;
     const middleWidth = tapeWidth - TAPE_EDGE_WIDTH * 2;
+    const halfMiddleWidth = middleWidth / 2;
     const edgeLeftX = -tapeWidth / 2 + TAPE_EDGE_WIDTH / 2;
     const edgeRightX = tapeWidth / 2 - TAPE_EDGE_WIDTH / 2;
 
     const leftEdge = this.add.image(edgeLeftX, 0, "police-tape-edge").setDisplaySize(TAPE_EDGE_WIDTH, rowHeight);
-    const middle = this.add
-      .tileSprite(0, 0, middleWidth, rowHeight, "police-tape-middle")
+    const leftMiddle = this.add
+      .tileSprite(-halfMiddleWidth / 2, 0, halfMiddleWidth, rowHeight, "police-tape-middle")
+      .setTileScale(rowScale, rowScale);
+    const rightMiddle = this.add
+      .tileSprite(halfMiddleWidth / 2, 0, halfMiddleWidth, rowHeight, "police-tape-middle")
       .setTileScale(rowScale, rowScale);
     const rightEdge = this.add
       .image(edgeRightX, 0, "police-tape-edge")
       .setDisplaySize(TAPE_EDGE_WIDTH, rowHeight)
       .setFlipX(true);
 
-    const tapeContainer = this.add.container(0, 0, [leftEdge, middle, rightEdge]);
-    container.add(tapeContainer);
+    const leftHalf = this.add.container(0, 0, [leftEdge, leftMiddle]);
+    const rightHalf = this.add.container(0, 0, [rightMiddle, rightEdge]);
+    container.add([leftHalf, rightHalf]);
 
     const cutPoint = this.buildCutPoint(container, 0, 0);
 
-    return { type: "police-tape", tapeContainer, cutPoint, cleared: false };
+    return { type: "police-tape", leftHalf, rightHalf, cutPoint, cutting: false, cleared: false };
   }
 
   buildCutPoint(container, x, y) {
     const marker = this.add.graphics().setPosition(x, y);
-    marker.lineStyle(CUT_PROGRESS_STROKE, 0xffffff, 0.6);
-    marker.strokeCircle(0, 0, CUT_PROGRESS_RADIUS);
+    marker.lineStyle(CUT_MARKER_STROKE, 0xffffff, 0.6);
+    marker.strokeCircle(0, 0, CUT_MARKER_RADIUS);
 
-    const progressGraphics = this.add.graphics().setPosition(x, y);
+    container.add(marker);
 
-    container.add([marker, progressGraphics]);
-
-    return { x, y, progressGraphics, cuts: 0 };
+    return { x, y, marker };
   }
 
   cullScrolledSegments() {
@@ -696,24 +704,12 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   setupSwipeInput() {
-    this.input.on("pointerdown", (pointer) => this.handlePointerDown(pointer));
+    this.input.on("pointerdown", () => this.sweepSmoother.reset());
     this.input.on("pointermove", (pointer) => this.handlePointerMove(pointer));
     this.input.on("pointerup", () => {
       this.toolIcon.setVisible(false);
       this.activeObstruction?.screws?.forEach((screw) => screw.progress.release());
     });
-  }
-
-  handlePointerDown(pointer) {
-    this.sweepSmoother.reset();
-
-    if (this.isTransitioning || this.toolSelectorObjects) {
-      return;
-    }
-
-    if (this.activeObstruction?.type === "police-tape") {
-      this.handleTapeCutAttempt(pointer);
-    }
   }
 
   handlePointerMove(pointer) {
@@ -754,7 +750,18 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   handleObstructionPointerMove(pointer) {
-    if (this.activeObstruction.type !== "board" || this.equippedTool.id !== "screwdriver") {
+    if (this.activeObstruction.type === "board") {
+      this.handleBoardScrewdriverMove(pointer);
+      return;
+    }
+
+    if (this.activeObstruction.type === "police-tape") {
+      this.handleTapeSwipeMove(pointer);
+    }
+  }
+
+  handleBoardScrewdriverMove(pointer) {
+    if (this.equippedTool.id !== "screwdriver") {
       return;
     }
 
@@ -780,6 +787,22 @@ export class HouseCleanScene extends Phaser.Scene {
       if (screw.progress.isComplete()) {
         this.completeScrew(screw);
       }
+    }
+  }
+
+  handleTapeSwipeMove(pointer) {
+    if (this.equippedTool.id !== "scissors" || this.activeObstruction.cutting) {
+      return;
+    }
+
+    const cutPoint = this.activeObstruction.cutPoint;
+    const cutWorldX = this.windowCenterX + cutPoint.x;
+    const cutWorldY = WINDOW_Y + cutPoint.y;
+    const distance = Phaser.Math.Distance.Between(pointer.x, pointer.y, cutWorldX, cutWorldY);
+
+    if (distance <= CUT_HIT_RADIUS) {
+      this.activeObstruction.cutting = true;
+      this.completeTapeCut(this.activeObstruction);
     }
   }
 
@@ -876,50 +899,41 @@ export class HouseCleanScene extends Phaser.Scene {
     });
   }
 
-  handleTapeCutAttempt(pointer) {
-    if (this.equippedTool.id !== "scissors") {
-      return;
-    }
-
-    const cutPoint = this.activeObstruction.cutPoint;
-    const cutWorldX = this.windowCenterX + cutPoint.x;
-    const cutWorldY = WINDOW_Y + cutPoint.y;
-    const distance = Phaser.Math.Distance.Between(pointer.x, pointer.y, cutWorldX, cutWorldY);
-
-    if (distance > CUT_HIT_RADIUS) {
-      return;
-    }
-
-    cutPoint.cuts += 1;
-    this.updateCutVisuals(cutPoint);
-
-    if (cutPoint.cuts >= CUT_REQUIRED_CLICKS) {
-      this.completeTapeCut(this.activeObstruction);
-    }
-  }
-
-  updateCutVisuals(cutPoint) {
-    const fraction = cutPoint.cuts / CUT_REQUIRED_CLICKS;
-
-    cutPoint.progressGraphics.clear();
-    cutPoint.progressGraphics.lineStyle(CUT_PROGRESS_STROKE, CUT_PROGRESS_COLOR, 1);
-    cutPoint.progressGraphics.beginPath();
-    cutPoint.progressGraphics.arc(0, 0, CUT_PROGRESS_RADIUS, -Math.PI / 2, -Math.PI / 2 + fraction * Math.PI * 2, false);
-    cutPoint.progressGraphics.strokePath();
-  }
-
   completeTapeCut(obstruction) {
-    this.tweens.add({
-      targets: obstruction.tapeContainer,
-      y: obstruction.tapeContainer.y + TAPE_FALL_DISTANCE,
-      duration: TAPE_FALL_DURATION,
-      ease: "Cubic.easeIn",
-      onComplete: () => {
-        obstruction.tapeContainer.destroy();
-        obstruction.cleared = true;
-        this.activeObstruction = null;
-      },
+    this.animateTapeHalfAway(obstruction, obstruction.leftHalf, -1);
+    this.animateTapeHalfAway(obstruction, obstruction.rightHalf, 1);
+  }
+
+  animateTapeHalfAway(obstruction, half, direction) {
+    const startX = half.x;
+    const startY = half.y;
+
+    this.tweens.chain({
+      targets: half,
+      tweens: [
+        { y: startY - TAPE_SPLIT_UP_DISTANCE, duration: TAPE_SPLIT_UP_DURATION, ease: "Sine.easeOut" },
+        { x: startX + direction * TAPE_SPLIT_APART_DISTANCE, duration: TAPE_SPLIT_APART_DURATION, ease: "Sine.easeOut" },
+        {
+          y: startY - TAPE_SPLIT_UP_DISTANCE + TAPE_FALL_DISTANCE,
+          duration: TAPE_FALL_DURATION,
+          ease: "Cubic.easeIn",
+          onComplete: () => {
+            half.destroy();
+            this.finishTapeRemoval(obstruction);
+          },
+        },
+      ],
     });
+  }
+
+  finishTapeRemoval(obstruction) {
+    if (obstruction.cleared) {
+      return;
+    }
+
+    obstruction.cleared = true;
+    obstruction.cutPoint.marker.destroy();
+    this.activeObstruction = null;
   }
 
   rotateToolTowardSweep(pointer) {
