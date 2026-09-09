@@ -917,6 +917,8 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   showLevelComplete() {
+    this.isTransitioning = true;
+
     this.add.rectangle(this.buildingX, CANVAS_HEIGHT / 2, this.canvasWidth, CANVAS_HEIGHT, 0x000000, 0.7).setDepth(100);
     this.add
       .text(this.buildingX, 580, "Level Complete", { fontSize: "40px", color: "#ffffff" })
