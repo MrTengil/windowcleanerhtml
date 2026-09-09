@@ -630,16 +630,18 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
+    if (this.activeObstruction) {
+      this.toolIcon.setVisible(true);
+      this.toolIcon.setPosition(pointer.x, pointer.y);
+      this.handleObstructionPointerMove(pointer);
+      return;
+    }
+
     const insideWindow = this.isInsideWindow(pointer);
     this.toolIcon.setVisible(insideWindow);
     this.toolIcon.setPosition(pointer.x, pointer.y);
 
     if (!insideWindow) {
-      return;
-    }
-
-    if (this.activeObstruction) {
-      this.handleObstructionPointerMove(pointer);
       return;
     }
 
