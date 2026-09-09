@@ -735,8 +735,14 @@ export class HouseCleanScene extends Phaser.Scene {
     const remainingScrew = obstruction.screws.find((candidate) => !candidate.done);
 
     if (remainingScrew) {
+      // Which way "swings down" depends on which side the pivot is on: the
+      // free end sits at a positive local x if the left screw remains,
+      // negative if the right one does, and the sign of the added rotation
+      // has to match so the free end moves down (positive y) rather than up.
+      obstruction.hingeDirection = remainingScrew === obstruction.screws[0] ? 1 : -1;
+
       this.pivotBoardPlank(obstruction.boardPlank, remainingScrew);
-      this.animateBoardHinge(obstruction.boardPlank);
+      this.animateBoardHinge(obstruction.boardPlank, obstruction.hingeDirection);
     } else {
       this.animateBoardFall(obstruction);
     }
@@ -774,10 +780,10 @@ export class HouseCleanScene extends Phaser.Scene {
     });
   }
 
-  animateBoardHinge(boardPlank) {
+  animateBoardHinge(boardPlank, hingeDirection) {
     this.tweens.add({
       targets: boardPlank,
-      rotation: boardPlank.rotation + BOARD_HINGE_ROTATION,
+      rotation: boardPlank.rotation + hingeDirection * BOARD_HINGE_ROTATION,
       duration: BOARD_HINGE_DURATION,
       ease: "Back.easeOut",
     });
@@ -789,7 +795,7 @@ export class HouseCleanScene extends Phaser.Scene {
     this.tweens.add({
       targets: obstruction.boardPlank,
       y: obstruction.boardPlank.y + BOARD_FALL_DISTANCE,
-      rotation: obstruction.boardPlank.rotation + BOARD_HINGE_ROTATION,
+      rotation: obstruction.boardPlank.rotation + obstruction.hingeDirection * BOARD_HINGE_ROTATION,
       duration: BOARD_FALL_DURATION,
       ease: "Cubic.easeIn",
       onComplete: () => {
