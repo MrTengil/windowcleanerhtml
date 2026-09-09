@@ -41,6 +41,19 @@ const UNSCREW_TARGET_ROTATION = Math.PI * 4;
 const SCREW_FALL_DISTANCE = 150;
 const SCREW_FALL_DURATION = 350;
 
+const TAPE_EDGE_WIDTH = 30;
+const TAPE_OVERHANG = 80;
+const TAPE_EDGE_NATIVE_WIDTH = 40;
+const TAPE_EDGE_NATIVE_HEIGHT = 70;
+const TAPE_FALL_DURATION = 500;
+const TAPE_FALL_DISTANCE = CANVAS_HEIGHT;
+
+const CUT_HIT_RADIUS = 90;
+const CUT_REQUIRED_CLICKS = 3;
+const CUT_PROGRESS_RADIUS = 50;
+const CUT_PROGRESS_STROKE = 6;
+const CUT_PROGRESS_COLOR = 0x4caf50;
+
 const HUD_RIGHT_MARGIN = 40;
 
 const SKY_COLOR = 0x87ceeb;
@@ -460,7 +473,10 @@ export class HouseCleanScene extends Phaser.Scene {
       container.add(this.add.image(0, ROOF_Y - WINDOW_Y, this.house.roofTextureKey));
     }
 
-    const obstruction = this.buildBoardObstruction(container);
+    const obstruction =
+      Phaser.Math.Between(0, 1) === 0
+        ? this.buildBoardObstruction(container)
+        : this.buildPoliceTapeObstruction(container);
 
     const segment = { container, dirtMask, worldY, floor, obstruction };
     this.segments.push(segment);
@@ -529,7 +545,7 @@ export class HouseCleanScene extends Phaser.Scene {
       ),
     ];
 
-    return { boardPlank, screws, cleared: false };
+    return { type: "board", boardPlank, screws, cleared: false };
   }
 
   buildScrew(container, x, y) {
@@ -544,6 +560,43 @@ export class HouseCleanScene extends Phaser.Scene {
       progress: new ScrewProgress({ targetRotation: UNSCREW_TARGET_ROTATION }),
       done: false,
     };
+  }
+
+  buildPoliceTapeObstruction(container) {
+    const rowScale = TAPE_EDGE_WIDTH / TAPE_EDGE_NATIVE_WIDTH;
+    const rowHeight = TAPE_EDGE_NATIVE_HEIGHT * rowScale;
+    const tapeWidth = WINDOW_WIDTH + TAPE_OVERHANG * 2;
+    const middleWidth = tapeWidth - TAPE_EDGE_WIDTH * 2;
+    const edgeLeftX = -tapeWidth / 2 + TAPE_EDGE_WIDTH / 2;
+    const edgeRightX = tapeWidth / 2 - TAPE_EDGE_WIDTH / 2;
+
+    const leftEdge = this.add.image(edgeLeftX, 0, "police-tape-edge").setDisplaySize(TAPE_EDGE_WIDTH, rowHeight);
+    const middle = this.add
+      .tileSprite(0, 0, middleWidth, rowHeight, "police-tape-middle")
+      .setTileScale(rowScale, rowScale);
+    const rightEdge = this.add
+      .image(edgeRightX, 0, "police-tape-edge")
+      .setDisplaySize(TAPE_EDGE_WIDTH, rowHeight)
+      .setFlipX(true);
+
+    const tapeContainer = this.add.container(0, 0, [leftEdge, middle, rightEdge]);
+    container.add(tapeContainer);
+
+    const cutPoint = this.buildCutPoint(container, 0, 0);
+
+    return { type: "police-tape", tapeContainer, cutPoint, cleared: false };
+  }
+
+  buildCutPoint(container, x, y) {
+    const marker = this.add.graphics().setPosition(x, y);
+    marker.lineStyle(CUT_PROGRESS_STROKE, 0xffffff, 0.6);
+    marker.strokeCircle(0, 0, CUT_PROGRESS_RADIUS);
+
+    const progressGraphics = this.add.graphics().setPosition(x, y);
+
+    container.add([marker, progressGraphics]);
+
+    return { x, y, progressGraphics, cuts: 0 };
   }
 
   cullScrolledSegments() {
@@ -643,12 +696,24 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   setupSwipeInput() {
-    this.input.on("pointerdown", () => this.sweepSmoother.reset());
+    this.input.on("pointerdown", (pointer) => this.handlePointerDown(pointer));
     this.input.on("pointermove", (pointer) => this.handlePointerMove(pointer));
     this.input.on("pointerup", () => {
       this.toolIcon.setVisible(false);
-      this.activeObstruction?.screws.forEach((screw) => screw.progress.release());
+      this.activeObstruction?.screws?.forEach((screw) => screw.progress.release());
     });
+  }
+
+  handlePointerDown(pointer) {
+    this.sweepSmoother.reset();
+
+    if (this.isTransitioning || this.toolSelectorObjects) {
+      return;
+    }
+
+    if (this.activeObstruction?.type === "police-tape") {
+      this.handleTapeCutAttempt(pointer);
+    }
   }
 
   handlePointerMove(pointer) {
@@ -689,7 +754,7 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   handleObstructionPointerMove(pointer) {
-    if (this.equippedTool.id !== "screwdriver") {
+    if (this.activeObstruction.type !== "board" || this.equippedTool.id !== "screwdriver") {
       return;
     }
 
@@ -805,6 +870,52 @@ export class HouseCleanScene extends Phaser.Scene {
       ease: "Cubic.easeIn",
       onComplete: () => {
         obstruction.boardPlank.destroy();
+        obstruction.cleared = true;
+        this.activeObstruction = null;
+      },
+    });
+  }
+
+  handleTapeCutAttempt(pointer) {
+    if (this.equippedTool.id !== "scissors") {
+      return;
+    }
+
+    const cutPoint = this.activeObstruction.cutPoint;
+    const cutWorldX = this.windowCenterX + cutPoint.x;
+    const cutWorldY = WINDOW_Y + cutPoint.y;
+    const distance = Phaser.Math.Distance.Between(pointer.x, pointer.y, cutWorldX, cutWorldY);
+
+    if (distance > CUT_HIT_RADIUS) {
+      return;
+    }
+
+    cutPoint.cuts += 1;
+    this.updateCutVisuals(cutPoint);
+
+    if (cutPoint.cuts >= CUT_REQUIRED_CLICKS) {
+      this.completeTapeCut(this.activeObstruction);
+    }
+  }
+
+  updateCutVisuals(cutPoint) {
+    const fraction = cutPoint.cuts / CUT_REQUIRED_CLICKS;
+
+    cutPoint.progressGraphics.clear();
+    cutPoint.progressGraphics.lineStyle(CUT_PROGRESS_STROKE, CUT_PROGRESS_COLOR, 1);
+    cutPoint.progressGraphics.beginPath();
+    cutPoint.progressGraphics.arc(0, 0, CUT_PROGRESS_RADIUS, -Math.PI / 2, -Math.PI / 2 + fraction * Math.PI * 2, false);
+    cutPoint.progressGraphics.strokePath();
+  }
+
+  completeTapeCut(obstruction) {
+    this.tweens.add({
+      targets: obstruction.tapeContainer,
+      y: obstruction.tapeContainer.y + TAPE_FALL_DISTANCE,
+      duration: TAPE_FALL_DURATION,
+      ease: "Cubic.easeIn",
+      onComplete: () => {
+        obstruction.tapeContainer.destroy();
         obstruction.cleared = true;
         this.activeObstruction = null;
       },

@@ -23,6 +23,8 @@ export class BootScene extends Phaser.Scene {
     this.load.image("board-edge", "assets/images/obstructions/board_edge.svg");
     this.load.image("board-middle", "assets/images/obstructions/board_middle.svg");
     this.load.image("screw-front", "assets/images/obstructions/screw_front.svg");
+    this.load.image("police-tape-edge", "assets/images/obstructions/police_tape_edge.svg");
+    this.load.image("police-tape-middle", "assets/images/obstructions/police_tape_middle.svg");
 
     CLOUDS.forEach((cloud) => {
       this.load.image(cloud.textureKey, `assets/images/clouds/${cloud.file}`);
