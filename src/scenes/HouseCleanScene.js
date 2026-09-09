@@ -757,19 +757,27 @@ export class HouseCleanScene extends Phaser.Scene {
     const dx = remainingScrew.image.x - boardPlank.x;
     const dy = remainingScrew.image.y - boardPlank.y;
 
+    // A rotated container's rendered position is origin + rotate(localCoord,
+    // rotation), so compensating for an origin change means rotating the
+    // offset by the container's own current rotation before subtracting it
+    // — a plain dx/dy subtraction only holds when rotation is 0.
+    const angle = boardPlank.rotation;
+    const rotatedDx = dx * Math.cos(angle) + dy * Math.sin(angle);
+    const rotatedDy = -dx * Math.sin(angle) + dy * Math.cos(angle);
+
     boardPlank.x = remainingScrew.image.x;
     boardPlank.y = remainingScrew.image.y;
 
     boardPlank.list.forEach((child) => {
-      child.x -= dx;
-      child.y -= dy;
+      child.x -= rotatedDx;
+      child.y -= rotatedDy;
     });
   }
 
   animateBoardHinge(boardPlank) {
     this.tweens.add({
       targets: boardPlank,
-      rotation: BOARD_HINGE_ROTATION,
+      rotation: boardPlank.rotation + BOARD_HINGE_ROTATION,
       duration: BOARD_HINGE_DURATION,
       ease: "Back.easeOut",
     });
