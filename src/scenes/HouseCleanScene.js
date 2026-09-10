@@ -1347,6 +1347,24 @@ export class HouseCleanScene extends Phaser.Scene {
       this.dirtMask.erase(this.eraserBrush, x, y);
       this.revealTracker.markRevealedInRadius(x, y, BRUSH_RADIUS);
       this.wipeDirtSpotsNear(x, y);
+      this.eraseSprayDecalsNear(x, y);
+    }
+  }
+
+  eraseSprayDecalsNear(x, y) {
+    for (let i = this.sprayDecals.length - 1; i >= 0; i--) {
+      const decal = this.sprayDecals[i];
+
+      if (Phaser.Math.Distance.Between(x, y, decal.x, decal.y) > SPRAY_SPOT_RADIUS) {
+        continue;
+      }
+
+      decal.image?.destroy();
+      this.sprayDecals.splice(i, 1);
+
+      if (this.activeSprayDecal === decal) {
+        this.stopSprayHold();
+      }
     }
   }
 
