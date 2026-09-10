@@ -815,8 +815,7 @@ export class HouseCleanScene extends Phaser.Scene {
 
     const local = this.toWindowLocal(pointer.x, pointer.y);
 
-    this.activeSprayDecal = this.findOrCreateSprayDecal(local.x, local.y);
-    this.sprayHoldStartTime = this.time.now;
+    this.attachSprayDecal(this.findOrCreateSprayDecal(local.x, local.y));
     this.sprayHoldTimer = this.time.addEvent({
       delay: SPRAY_STAGE_DURATION,
       loop: true,
@@ -833,19 +832,27 @@ export class HouseCleanScene extends Phaser.Scene {
     }
 
     const local = this.toWindowLocal(pointer.x, pointer.y);
+    const nearestDecal = this.findOrCreateSprayDecal(local.x, local.y);
 
-    if (
-      Phaser.Math.Distance.Between(local.x, local.y, this.activeSprayDecal.x, this.activeSprayDecal.y) >
-      SPRAY_SPOT_RADIUS
-    ) {
-      this.activeSprayDecal = this.findOrCreateSprayDecal(local.x, local.y);
-      this.sprayHoldStartTime = this.time.now;
+    if (nearestDecal !== this.activeSprayDecal) {
+      this.attachSprayDecal(nearestDecal);
     }
 
     const elapsedMs = this.time.now - this.sprayHoldStartTime;
     const stage = computeSprayStage({ elapsedMs, stageDurationMs: SPRAY_STAGE_DURATION, maxStage: SPRAY_MAX_STAGE });
 
     this.setSprayDecalStage(this.activeSprayDecal, stage);
+  }
+
+  // Attaching to a decal that already has some stage resumes the hold clock
+  // from that stage's own elapsed time instead of restarting at 0 — without
+  // this, re-finding an existing decal (trivial right at its own edge, since
+  // detecting "drifted away" and "found a nearby decal to reuse" share the
+  // same radius) would make setSprayDecalStage briefly compute a lower stage
+  // than the decal already reached, visibly destroying and rebuilding it.
+  attachSprayDecal(decal) {
+    this.activeSprayDecal = decal;
+    this.sprayHoldStartTime = this.time.now - decal.stage * SPRAY_STAGE_DURATION;
   }
 
   stopSprayHold() {
@@ -870,7 +877,7 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   setSprayDecalStage(decal, stage) {
-    if (stage === decal.stage) {
+    if (stage <= decal.stage) {
       return;
     }
 
