@@ -10,6 +10,8 @@ import { SweepSmoother } from "../interactions/SweepSmoother.js";
 import { ScrewProgress } from "../interactions/ScrewProgress.js";
 import { computeTiltedBoardWidth } from "../utils/boardTilt.js";
 import { CLOUDS, CLOUD_FIRST_FLOOR } from "../config/clouds.js";
+import { SPRAY_PATTERNS } from "../config/sprayPatterns.js";
+import { computeSprayStage } from "../utils/computeSprayStage.js";
 import { formatFloorLabel } from "../ui/HUD.js";
 
 const CANVAS_HEIGHT = 1560;
@@ -87,6 +89,11 @@ const REVEAL_THRESHOLD = 0.99;
 const DIRT_FADE_DURATION = 300;
 const SWEEP_TIME_CONSTANT = 100;
 
+const SPRAY_STAGE_DURATION = 200;
+const SPRAY_MAX_STAGE = 4;
+const SPRAY_SPOT_RADIUS = 60;
+const SPRAY_DECAL_DISPLAY_SIZE = 120;
+
 const WALL_TILE_HEIGHT = 384;
 const SEGMENT_SPACING = WALL_TILE_HEIGHT * 2;
 const SCROLL_DURATION = 700;
@@ -146,6 +153,8 @@ export class HouseCleanScene extends Phaser.Scene {
     this.scroll = { offset: 0 };
     this.segments = [];
     this.clouds = [];
+    this.sprayHoldTimer = null;
+    this.activeSprayDecal = null;
   }
 
   computeLayout() {
@@ -483,7 +492,7 @@ export class HouseCleanScene extends Phaser.Scene {
         ? this.buildBoardObstruction(container)
         : this.buildPoliceTapeObstruction(container);
 
-    const segment = { container, dirtMask, worldY, floor, obstruction };
+    const segment = { container, dirtMask, worldY, floor, obstruction, sprayDecals: [] };
     this.segments.push(segment);
 
     return segment;
@@ -494,6 +503,9 @@ export class HouseCleanScene extends Phaser.Scene {
     this.revealTracker = new RevealTracker({ width: WINDOW_WIDTH, height: WINDOW_HEIGHT, cellSize: REVEAL_CELL_SIZE });
     this.floorComplete = false;
     this.activeObstruction = segment.obstruction;
+    this.activeContainer = segment.container;
+    this.sprayDecals = segment.sprayDecals;
+    this.stopSprayHold();
 
     this.drawProgressBar(0);
   }
@@ -700,21 +712,116 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   setupSwipeInput() {
-    this.input.on("pointerdown", () => this.handlePointerDown());
+    this.input.on("pointerdown", (pointer) => this.handlePointerDown(pointer));
     this.input.on("pointermove", (pointer) => this.handlePointerMove(pointer));
     this.input.on("pointerup", () => {
       this.toolIcon.setVisible(false);
       this.activeObstruction?.screws?.forEach((screw) => screw.progress.release());
+      this.stopSprayHold();
     });
   }
 
-  handlePointerDown() {
+  handlePointerDown(pointer) {
     this.sweepSmoother.reset();
 
     if (this.activeObstruction?.type === "police-tape") {
       this.activeObstruction.hasBeenAbove = false;
       this.activeObstruction.hasBeenBelow = false;
     }
+
+    if (this.equippedTool.id === "spray-bottle") {
+      this.startSprayHold(pointer);
+    }
+  }
+
+  canInteractWithWindow(pointer) {
+    return (
+      !this.isTransitioning && !this.toolSelectorObjects && !this.activeObstruction && this.isInsideWindow(pointer)
+    );
+  }
+
+  startSprayHold(pointer) {
+    if (!this.canInteractWithWindow(pointer)) {
+      return;
+    }
+
+    const local = this.toWindowLocal(pointer.x, pointer.y);
+
+    this.activeSprayDecal = this.findOrCreateSprayDecal(local.x, local.y);
+    this.sprayHoldStartTime = this.time.now;
+    this.sprayHoldTimer = this.time.addEvent({
+      delay: SPRAY_STAGE_DURATION,
+      loop: true,
+      callback: () => this.tickSprayHold(),
+    });
+  }
+
+  tickSprayHold() {
+    const pointer = this.input.activePointer;
+
+    if (!pointer.isDown || this.equippedTool.id !== "spray-bottle" || !this.canInteractWithWindow(pointer)) {
+      this.stopSprayHold();
+      return;
+    }
+
+    const local = this.toWindowLocal(pointer.x, pointer.y);
+
+    if (
+      Phaser.Math.Distance.Between(local.x, local.y, this.activeSprayDecal.x, this.activeSprayDecal.y) >
+      SPRAY_SPOT_RADIUS
+    ) {
+      this.activeSprayDecal = this.findOrCreateSprayDecal(local.x, local.y);
+      this.sprayHoldStartTime = this.time.now;
+    }
+
+    const elapsedMs = this.time.now - this.sprayHoldStartTime;
+    const stage = computeSprayStage({ elapsedMs, stageDurationMs: SPRAY_STAGE_DURATION, maxStage: SPRAY_MAX_STAGE });
+
+    this.setSprayDecalStage(this.activeSprayDecal, stage);
+  }
+
+  stopSprayHold() {
+    this.sprayHoldTimer?.remove();
+    this.sprayHoldTimer = null;
+    this.activeSprayDecal = null;
+  }
+
+  findOrCreateSprayDecal(x, y) {
+    const existing = this.sprayDecals.find(
+      (decal) => Phaser.Math.Distance.Between(x, y, decal.x, decal.y) <= SPRAY_SPOT_RADIUS,
+    );
+
+    if (existing) {
+      return existing;
+    }
+
+    const decal = { x, y, stage: 0, image: null };
+    this.sprayDecals.push(decal);
+
+    return decal;
+  }
+
+  setSprayDecalStage(decal, stage) {
+    if (stage === decal.stage) {
+      return;
+    }
+
+    decal.stage = stage;
+    decal.image?.destroy();
+
+    if (stage === 0) {
+      return;
+    }
+
+    const containerX = WINDOW_OFFSET_X - WINDOW_WIDTH / 2 + decal.x;
+    const containerY = -WINDOW_HEIGHT / 2 + decal.y;
+
+    const sprayPattern = SPRAY_PATTERNS.find((pattern) => pattern.stage === stage);
+
+    decal.image = this.add
+      .image(containerX, containerY, sprayPattern.textureKey)
+      .setDisplaySize(SPRAY_DECAL_DISPLAY_SIZE, SPRAY_DECAL_DISPLAY_SIZE);
+    this.activeContainer.add(decal.image);
   }
 
   handlePointerMove(pointer) {

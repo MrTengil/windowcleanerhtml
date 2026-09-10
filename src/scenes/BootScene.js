@@ -1,4 +1,5 @@
 import { CLOUDS } from "../config/clouds.js";
+import { SPRAY_PATTERNS } from "../config/sprayPatterns.js";
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -30,6 +31,10 @@ export class BootScene extends Phaser.Scene {
 
     CLOUDS.forEach((cloud) => {
       this.load.image(cloud.textureKey, `assets/images/clouds/${cloud.file}`);
+    });
+
+    SPRAY_PATTERNS.forEach((sprayPattern) => {
+      this.load.image(sprayPattern.textureKey, `assets/images/spray-patterns/${sprayPattern.file}`);
     });
   }
 
