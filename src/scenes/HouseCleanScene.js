@@ -5,6 +5,7 @@ import { LIFTS } from "../config/lifts.js";
 import { RevealTracker } from "../interactions/RevealTracker.js";
 import { segmentWorldY, hasScrolledOutOfView } from "../utils/worldScroll.js";
 import { createCloudSpec } from "../utils/cloudSpec.js";
+import { scatterPositions } from "../utils/scatterPositions.js";
 import { computeSweepRotation } from "../utils/sweepRotation.js";
 import { SweepSmoother } from "../interactions/SweepSmoother.js";
 import { ScrewProgress } from "../interactions/ScrewProgress.js";
@@ -93,6 +94,10 @@ const SPRAY_STAGE_DURATION = 200;
 const SPRAY_MAX_STAGE = 4;
 const SPRAY_SPOT_RADIUS = 60;
 const SPRAY_DECAL_DISPLAY_SIZE = 120;
+
+const DIRT_SPOT_MARGIN = 60;
+const DIRT_SPOT_MIN_SPACING = 120;
+const DIRT_SPOT_DISPLAY_SIZE = 90;
 
 const WALL_TILE_HEIGHT = 384;
 const SEGMENT_SPACING = WALL_TILE_HEIGHT * 2;
@@ -487,12 +492,14 @@ export class HouseCleanScene extends Phaser.Scene {
       container.add(this.add.image(0, ROOF_Y - WINDOW_Y, this.house.roofTextureKey));
     }
 
+    const dirtSpots = this.buildDirtSpots(container);
+
     const obstruction =
       Phaser.Math.Between(0, 1) === 0
         ? this.buildBoardObstruction(container)
         : this.buildPoliceTapeObstruction(container);
 
-    const segment = { container, dirtMask, worldY, floor, obstruction, sprayDecals: [] };
+    const segment = { container, dirtMask, worldY, floor, obstruction, sprayDecals: [], dirtSpots };
     this.segments.push(segment);
 
     return segment;
@@ -505,9 +512,35 @@ export class HouseCleanScene extends Phaser.Scene {
     this.activeObstruction = segment.obstruction;
     this.activeContainer = segment.container;
     this.sprayDecals = segment.sprayDecals;
+    this.dirtSpots = segment.dirtSpots;
     this.stopSprayHold();
 
     this.drawProgressBar(0);
+  }
+
+  buildDirtSpots(container) {
+    const spotTypes = this.house.dirtTypeIds.map((id) => DIRT_TYPES[id]).filter((dirtType) => dirtType.textureKey);
+
+    const positions = scatterPositions({
+      count: spotTypes.length,
+      width: WINDOW_WIDTH - DIRT_SPOT_MARGIN * 2,
+      height: WINDOW_HEIGHT - DIRT_SPOT_MARGIN * 2,
+      minSpacing: DIRT_SPOT_MIN_SPACING,
+    });
+
+    return spotTypes.map((dirtType, index) => {
+      const x = positions[index].x + WINDOW_WIDTH / 2;
+      const y = positions[index].y + WINDOW_HEIGHT / 2;
+      const containerX = WINDOW_OFFSET_X - WINDOW_WIDTH / 2 + x;
+      const containerY = -WINDOW_HEIGHT / 2 + y;
+
+      const image = this.add
+        .image(containerX, containerY, dirtType.textureKey)
+        .setDisplaySize(DIRT_SPOT_DISPLAY_SIZE, DIRT_SPOT_DISPLAY_SIZE);
+      container.add(image);
+
+      return { type: dirtType.id, x, y, cleared: false, image };
+    });
   }
 
   buildBoardObstruction(container) {

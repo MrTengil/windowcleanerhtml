@@ -1,5 +1,6 @@
 import { CLOUDS } from "../config/clouds.js";
 import { SPRAY_PATTERNS } from "../config/sprayPatterns.js";
+import { DIRT_TYPES } from "../config/dirtTypes.js";
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -36,6 +37,12 @@ export class BootScene extends Phaser.Scene {
     SPRAY_PATTERNS.forEach((sprayPattern) => {
       this.load.image(sprayPattern.textureKey, `assets/images/spray-patterns/${sprayPattern.file}`);
     });
+
+    Object.values(DIRT_TYPES)
+      .filter((dirtType) => dirtType.textureKey)
+      .forEach((dirtType) => {
+        this.load.image(dirtType.textureKey, `assets/images/dirt/${dirtType.file}`);
+      });
   }
 
   create() {

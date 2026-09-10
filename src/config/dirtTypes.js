@@ -12,5 +12,16 @@ export const DIRT_TYPES = {
     toolId: "squeegee",
     hitsToClean: 1,
     color: 0xf5f5f5,
+    textureKey: "dirt-bird-poop",
+    file: "bird_poop.svg",
+  },
+  "hand-prints": {
+    id: "hand-prints",
+    interactionType: "tap",
+    toolId: "squeegee",
+    hitsToClean: 1,
+    color: 0xc9b8a8,
+    textureKey: "dirt-hand-prints",
+    file: "hand_prints.svg",
   },
 };
