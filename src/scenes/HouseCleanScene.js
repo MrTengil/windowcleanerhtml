@@ -103,6 +103,7 @@ const DIRT_SPOT_MARGIN = 80;
 const DIRT_SPOT_MIN_SPACING = 160;
 const DIRT_SPOT_DISPLAY_SIZE = 140;
 const DIRT_SPOT_HIT_RADIUS = 60;
+const DIRT_SPOT_SNAP_RADIUS = 90;
 
 const POOP_HOLD_TICK_INTERVAL = 100;
 const SPONGE_VIGOR_SCALE = 1.15;
@@ -815,8 +816,9 @@ export class HouseCleanScene extends Phaser.Scene {
     }
 
     const local = this.toWindowLocal(pointer.x, pointer.y);
+    const target = this.findSprayTargetPosition(local.x, local.y);
 
-    this.attachSprayDecal(this.findOrCreateSprayDecal(local.x, local.y));
+    this.attachSprayDecal(this.findOrCreateSprayDecal(target.x, target.y));
     this.sprayHoldTimer = this.time.addEvent({
       delay: SPRAY_STAGE_DURATION,
       loop: true,
@@ -833,7 +835,8 @@ export class HouseCleanScene extends Phaser.Scene {
     }
 
     const local = this.toWindowLocal(pointer.x, pointer.y);
-    const nearestDecal = this.findOrCreateSprayDecal(local.x, local.y);
+    const target = this.findSprayTargetPosition(local.x, local.y);
+    const nearestDecal = this.findOrCreateSprayDecal(target.x, target.y);
 
     if (nearestDecal !== this.activeSprayDecal) {
       this.attachSprayDecal(nearestDecal);
@@ -843,6 +846,19 @@ export class HouseCleanScene extends Phaser.Scene {
     const stage = computeSprayStage({ elapsedMs, stageDurationMs: SPRAY_STAGE_DURATION, maxStage: SPRAY_MAX_STAGE });
 
     this.setSprayDecalStage(this.activeSprayDecal, stage);
+  }
+
+  // Spraying near an uncleared dirt spot snaps to its exact center instead of
+  // wherever the pointer happens to be — otherwise a spray decal can visibly
+  // overlap the spot's (much larger) sprite while still failing the strict
+  // center-to-center distance check sprayStageAt() uses, so it never actually
+  // counts as sprayed.
+  findSprayTargetPosition(x, y) {
+    const nearbySpot = this.dirtSpots.find(
+      (spot) => !spot.cleared && Phaser.Math.Distance.Between(x, y, spot.x, spot.y) <= DIRT_SPOT_SNAP_RADIUS,
+    );
+
+    return nearbySpot ? { x: nearbySpot.x, y: nearbySpot.y } : { x, y };
   }
 
   // Attaching to a decal that already has some stage resumes the hold clock
@@ -1363,7 +1379,10 @@ export class HouseCleanScene extends Phaser.Scene {
     for (let i = this.sprayDecals.length - 1; i >= 0; i--) {
       const decal = this.sprayDecals[i];
 
-      if (Phaser.Math.Distance.Between(x, y, decal.x, decal.y) > SPRAY_SPOT_RADIUS) {
+      if (
+        Phaser.Math.Distance.Between(x, y, decal.x, decal.y) > SPRAY_SPOT_RADIUS ||
+        this.decalGuardsUnclearedSpot(decal)
+      ) {
         continue;
       }
 
@@ -1374,6 +1393,18 @@ export class HouseCleanScene extends Phaser.Scene {
         this.stopSprayHold();
       }
     }
+  }
+
+  // A decal sitting on a dirt spot that still needs its spray precondition
+  // (hand-prints' wipe, bird-poop's hold) must survive the very wiping/
+  // holding it's gating — otherwise the first successful step both consumes
+  // the decal and destroys it, so the remaining hits/hold-time can never be
+  // reached. Once the spot is actually cleared, clearDirtSpot() erases its
+  // decal explicitly instead.
+  decalGuardsUnclearedSpot(decal) {
+    return this.dirtSpots.some(
+      (spot) => !spot.cleared && Phaser.Math.Distance.Between(decal.x, decal.y, spot.x, spot.y) <= SPRAY_SPOT_RADIUS,
+    );
   }
 
   wipeDirtSpotsNear(x, y) {
@@ -1409,6 +1440,7 @@ export class HouseCleanScene extends Phaser.Scene {
   clearDirtSpot(spot) {
     spot.cleared = true;
     spot.image.destroy();
+    this.eraseSprayDecalsNear(spot.x, spot.y);
     this.updateRevealProgress();
   }
 
