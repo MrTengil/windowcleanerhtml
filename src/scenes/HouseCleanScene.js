@@ -108,10 +108,10 @@ const DIRT_SPOT_SNAP_RADIUS = 90;
 const POOP_HOLD_TICK_INTERVAL = 100;
 const SPONGE_VIGOR_SCALE = 1.15;
 const SPONGE_VIGOR_DURATION = 80;
-const BUBBLE_DISPLAY_SIZE = 40;
+const BUBBLE_SPAWN_COUNT_PER_TICK = 3;
 const BUBBLE_RISE_DISTANCE = 80;
 const BUBBLE_FADE_DURATION = 700;
-const BUBBLE_JITTER = 20;
+const BUBBLE_JITTER = 45;
 
 const WALL_TILE_HEIGHT = 384;
 const SEGMENT_SPACING = WALL_TILE_HEIGHT * 2;
@@ -967,7 +967,7 @@ export class HouseCleanScene extends Phaser.Scene {
     const now = this.time.now;
     this.activePoopSpot.progress.trackTime(now - this.poopHoldLastTick);
     this.poopHoldLastTick = now;
-    this.spawnHoldBubble(this.activePoopSpot);
+    this.spawnHoldBubbles(this.activePoopSpot);
 
     if (this.activePoopSpot.progress.isComplete()) {
       this.clearDirtSpot(this.activePoopSpot);
@@ -999,6 +999,12 @@ export class HouseCleanScene extends Phaser.Scene {
     this.toolIcon.setScale(this.toolIconRestingScale);
   }
 
+  spawnHoldBubbles(spot) {
+    for (let i = 0; i < BUBBLE_SPAWN_COUNT_PER_TICK; i++) {
+      this.spawnHoldBubble(spot);
+    }
+  }
+
   spawnHoldBubble(spot) {
     const bubbleSpec = Phaser.Utils.Array.GetRandom(BUBBLES);
     const jitterX = Phaser.Math.Between(-BUBBLE_JITTER, BUBBLE_JITTER);
@@ -1007,7 +1013,7 @@ export class HouseCleanScene extends Phaser.Scene {
 
     const bubble = this.add
       .image(containerX, containerY, bubbleSpec.textureKey)
-      .setDisplaySize(BUBBLE_DISPLAY_SIZE, BUBBLE_DISPLAY_SIZE);
+      .setDisplaySize(bubbleSpec.displaySize, bubbleSpec.displaySize);
     this.activeContainer.add(bubble);
 
     this.tweens.add({
