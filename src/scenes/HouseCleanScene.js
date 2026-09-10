@@ -92,6 +92,7 @@ const REVEAL_CELL_SIZE = 40;
 const REVEAL_THRESHOLD = 0.99;
 const DIRT_FADE_DURATION = 300;
 const SWEEP_TIME_CONSTANT = 100;
+const DRAGGING_TOOL_ICON_SIZE = 100;
 
 const SPRAY_STAGE_DURATION = 200;
 const SPRAY_MAX_STAGE = 4;
@@ -701,7 +702,7 @@ export class HouseCleanScene extends Phaser.Scene {
   refreshDraggingToolIcon() {
     this.toolIcon?.destroy();
 
-    this.toolIcon = this.createToolIcon(this.equippedTool, 0, 0, BRUSH_RADIUS * 2, { withBorder: false })
+    this.toolIcon = this.createToolIcon(this.equippedTool, 0, 0, DRAGGING_TOOL_ICON_SIZE, { withBorder: false })
       .setVisible(false)
       .setDepth(1000);
   }
@@ -1005,15 +1006,17 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
+    const showToolIcon = this.equippedTool.id !== "spray-bottle";
+
     if (this.activeObstruction) {
-      this.toolIcon.setVisible(true);
+      this.toolIcon.setVisible(showToolIcon);
       this.toolIcon.setPosition(pointer.x, pointer.y);
       this.handleObstructionPointerMove(pointer);
       return;
     }
 
     const insideWindow = this.isInsideWindow(pointer);
-    this.toolIcon.setVisible(insideWindow);
+    this.toolIcon.setVisible(insideWindow && showToolIcon);
     this.toolIcon.setPosition(pointer.x, pointer.y);
 
     if (!insideWindow) {
