@@ -1386,10 +1386,19 @@ export class HouseCleanScene extends Phaser.Scene {
   updateRevealProgress() {
     this.drawProgressBar(this.revealTracker.revealedFraction());
 
-    if (!this.floorComplete && this.revealTracker.isFullyRevealed(REVEAL_THRESHOLD) && !this.activeObstruction) {
+    if (
+      !this.floorComplete &&
+      this.revealTracker.isFullyRevealed(REVEAL_THRESHOLD) &&
+      !this.activeObstruction &&
+      this.allDirtSpotsCleared()
+    ) {
       this.floorComplete = true;
       this.fadeOutRemainingDirt();
     }
+  }
+
+  allDirtSpotsCleared() {
+    return this.dirtSpots.every((spot) => spot.cleared);
   }
 
   fadeOutRemainingDirt() {
