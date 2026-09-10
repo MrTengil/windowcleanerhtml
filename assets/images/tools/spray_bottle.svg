@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 330" width="220" height="330">
+  <!-- Spray bottle, side view — rotated trigger, rounder body shape, and new color scheme (teal outline, blue liquid, gold trim, dark red trigger) -->
+  <defs>
+    <clipPath id="bodyClip">
+      <path d="M92 96
+               L92 70
+               L128 70
+               L128 96
+               Q158 102 160 130
+               Q162 145 162 165
+               L162 286
+               Q162 304 144 304
+               L76 304
+               Q58 304 58 286
+               L58 165
+               Q58 145 60 130
+               Q62 102 92 96 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- bottle body: white fill, then clipped blue liquid, then crisp teal outline on top -->
+  <path d="M92 96
+           L92 70
+           L128 70
+           L128 96
+           Q158 102 160 130
+           Q162 145 162 165
+           L162 286
+           Q162 304 144 304
+           L76 304
+           Q58 304 58 286
+           L58 165
+           Q58 145 60 130
+           Q62 102 92 96 Z"
+        fill="#FFFFFF"/>
+
+  <!-- liquid fill, clipped to the body silhouette, with a gently wavy top surface -->
+  <path d="M50 160 Q75 153 100 161 T150 157 Q165 155 176 162 L176 320 L50 320 Z"
+        fill="#2E70FA" clip-path="url(#bodyClip)"/>
+
+  <g stroke="#143A3B" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" fill="none">
+    <!-- body outline (redrawn rounder per the reference: fuller shoulders, rounder base corners) -->
+    <path d="M92 96
+             L92 70
+             L128 70
+             L128 96
+             Q158 102 160 130
+             Q162 145 162 165
+             L162 286
+             Q162 304 144 304
+             L76 304
+             Q58 304 58 286
+             L58 165
+             Q58 145 60 130
+             Q62 102 92 96 Z"/>
+
+    <!-- sprayer housing (flat-topped, curving down to the nozzle) -->
+    <path d="M92 70
+             L92 46
+             Q92 38 100 38
+             L172 38
+             Q188 38 188 54
+             Q188 68 174 70
+             L128 70"
+          fill="#FFFFFF"/>
+    <!-- nozzle tip notch -->
+    <path d="M186 50 L200 50 Q204 50 204 54 Q204 58 200 58 L186 58" fill="#FFFFFF"/>
+
+    <!-- trigger lever, rotated to sweep down and to the right beneath the nozzle -->
+    <path d="M170 64 Q182 90 214 116 Q206 122 198 112 Q182 96 162 72 Z" fill="#7A1B0E" stroke="#143A3B" stroke-width="4"/>
+  </g>
+
+  <!-- ribbed collar accent, between sprayer and neck -->
+  <rect x="94" y="70" width="32" height="18" rx="2" fill="#E3B753" stroke="#143A3B" stroke-width="5"/>
+  <g stroke="#143A3B" stroke-width="2.5">
+    <line x1="101" y1="72" x2="101" y2="86"/>
+    <line x1="108" y1="72" x2="108" y2="86"/>
+    <line x1="115" y1="72" x2="115" y2="86"/>
+    <line x1="122" y1="72" x2="122" y2="86"/>
+  </g>
+  <!-- corner cap accent on the sprayer housing -->
+  <path d="M100 42 L92 42 L92 66 L100 62 Z" fill="#E3B753" stroke="#143A3B" stroke-width="5" stroke-linejoin="round"/>
+
+  <!-- label band -->
+  <rect x="64" y="168" width="90" height="58" rx="5" fill="#FFFFFF" stroke="#143A3B" stroke-width="6"/>
+  <rect x="64" y="168" width="90" height="12" rx="5" fill="#E3B753" stroke="#143A3B" stroke-width="6"/>
+
+  <!-- sparkle logo mark -->
+  <g fill="#E3B753" stroke="#143A3B" stroke-width="2" stroke-linejoin="round">
+    <path d="M78 194 L81 201 L88 204 L81 207 L78 214 L75 207 L68 204 L75 201 Z"/>
+  </g>
+
+  <!-- brand text (fictional, punny) -->
+  <text x="111" y="204" font-family="Arial, sans-serif" font-size="15" font-weight="bold"
+        fill="#143A3B" text-anchor="middle">MIST</text>
+  <text x="111" y="219" font-family="Arial, sans-serif" font-size="9.5" font-weight="bold"
+        fill="#143A3B" text-anchor="middle">OPPORTUNITY</text>
+</svg>

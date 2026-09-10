@@ -44,4 +44,10 @@ describe("config integrity", () => {
 
     expect(screwdriver.canCleanWindow).toBe(false);
   });
+
+  it("the spray bottle cannot clean the window", () => {
+    const sprayBottle = TOOLS.find((tool) => tool.id === "spray-bottle");
+
+    expect(sprayBottle.canCleanWindow).toBe(false);
+  });
 });
