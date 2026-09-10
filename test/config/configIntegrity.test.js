@@ -25,11 +25,13 @@ describe("config integrity", () => {
     }
   });
 
-  it("every dirt type's tool id exists in TOOLS", () => {
-    const toolIds = new Set(TOOLS.map((tool) => tool.id));
+  it("every dirt type's tool id(s) exist in TOOLS", () => {
+    const validToolIds = new Set(TOOLS.map((tool) => tool.id));
 
     for (const dirtType of Object.values(DIRT_TYPES)) {
-      expect(toolIds.has(dirtType.toolId)).toBe(true);
+      for (const toolId of dirtType.toolIds ?? [dirtType.toolId]) {
+        expect(validToolIds.has(toolId)).toBe(true);
+      }
     }
   });
 

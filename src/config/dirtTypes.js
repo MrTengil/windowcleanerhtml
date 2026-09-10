@@ -17,9 +17,10 @@ export const DIRT_TYPES = {
   },
   "hand-prints": {
     id: "hand-prints",
-    interactionType: "tap",
-    toolId: "squeegee",
-    hitsToClean: 1,
+    interactionType: "wipe",
+    toolIds: ["squeegee", "sponge"],
+    requiredSprayStage: 1,
+    hitsToClean: 6,
     color: 0xc9b8a8,
     textureKey: "dirt-hand-prints",
     file: "hand_prints.svg",

@@ -3,6 +3,7 @@ import { DIRT_TYPES } from "../config/dirtTypes.js";
 import { TOOLS } from "../config/tools.js";
 import { LIFTS } from "../config/lifts.js";
 import { RevealTracker } from "../interactions/RevealTracker.js";
+import { DirtSpot } from "../entities/DirtSpot.js";
 import { segmentWorldY, hasScrolledOutOfView } from "../utils/worldScroll.js";
 import { createCloudSpec } from "../utils/cloudSpec.js";
 import { scatterPositions } from "../utils/scatterPositions.js";
@@ -98,6 +99,7 @@ const SPRAY_DECAL_DISPLAY_SIZE = 120;
 const DIRT_SPOT_MARGIN = 60;
 const DIRT_SPOT_MIN_SPACING = 120;
 const DIRT_SPOT_DISPLAY_SIZE = 90;
+const DIRT_SPOT_HIT_RADIUS = 60;
 
 const WALL_TILE_HEIGHT = 384;
 const SEGMENT_SPACING = WALL_TILE_HEIGHT * 2;
@@ -539,7 +541,14 @@ export class HouseCleanScene extends Phaser.Scene {
         .setDisplaySize(DIRT_SPOT_DISPLAY_SIZE, DIRT_SPOT_DISPLAY_SIZE);
       container.add(image);
 
-      return { type: dirtType.id, x, y, cleared: false, image };
+      return {
+        type: dirtType.id,
+        x,
+        y,
+        cleared: false,
+        image,
+        progress: new DirtSpot({ hitsToClean: dirtType.hitsToClean }),
+      };
     });
   }
 
@@ -1195,7 +1204,44 @@ export class HouseCleanScene extends Phaser.Scene {
 
       this.dirtMask.erase(this.eraserBrush, x, y);
       this.revealTracker.markRevealedInRadius(x, y, BRUSH_RADIUS);
+      this.wipeDirtSpotsNear(x, y);
     }
+  }
+
+  wipeDirtSpotsNear(x, y) {
+    for (const spot of this.dirtSpots) {
+      const dirtType = DIRT_TYPES[spot.type];
+
+      if (
+        spot.cleared ||
+        dirtType.interactionType !== "wipe" ||
+        !dirtType.toolIds.includes(this.equippedTool.id) ||
+        Phaser.Math.Distance.Between(x, y, spot.x, spot.y) > DIRT_SPOT_HIT_RADIUS ||
+        this.sprayStageAt(spot.x, spot.y) < dirtType.requiredSprayStage
+      ) {
+        continue;
+      }
+
+      spot.progress.registerTap();
+
+      if (spot.progress.isClean()) {
+        this.clearDirtSpot(spot);
+      }
+    }
+  }
+
+  sprayStageAt(x, y) {
+    const decal = this.sprayDecals.find(
+      (candidate) => Phaser.Math.Distance.Between(x, y, candidate.x, candidate.y) <= SPRAY_SPOT_RADIUS,
+    );
+
+    return decal?.stage ?? 0;
+  }
+
+  clearDirtSpot(spot) {
+    spot.cleared = true;
+    spot.image.destroy();
+    this.updateRevealProgress();
   }
 
   updateRevealProgress() {
