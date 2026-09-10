@@ -8,9 +8,10 @@ export const DIRT_TYPES = {
   },
   "bird-poop": {
     id: "bird-poop",
-    interactionType: "tap",
-    toolId: "squeegee",
-    hitsToClean: 1,
+    interactionType: "hold",
+    toolIds: ["sponge"],
+    requiredSprayStage: 4,
+    holdDurationMs: 3000,
     color: 0xf5f5f5,
     textureKey: "dirt-bird-poop",
     file: "bird_poop.svg",

@@ -4,6 +4,8 @@ import { TOOLS } from "../config/tools.js";
 import { LIFTS } from "../config/lifts.js";
 import { RevealTracker } from "../interactions/RevealTracker.js";
 import { DirtSpot } from "../entities/DirtSpot.js";
+import { HoldProgress } from "../interactions/HoldProgress.js";
+import { BUBBLES } from "../config/bubbles.js";
 import { segmentWorldY, hasScrolledOutOfView } from "../utils/worldScroll.js";
 import { createCloudSpec } from "../utils/cloudSpec.js";
 import { scatterPositions } from "../utils/scatterPositions.js";
@@ -101,6 +103,14 @@ const DIRT_SPOT_MIN_SPACING = 120;
 const DIRT_SPOT_DISPLAY_SIZE = 90;
 const DIRT_SPOT_HIT_RADIUS = 60;
 
+const POOP_HOLD_TICK_INTERVAL = 100;
+const SPONGE_VIGOR_SCALE = 1.15;
+const SPONGE_VIGOR_DURATION = 80;
+const BUBBLE_DISPLAY_SIZE = 40;
+const BUBBLE_RISE_DISTANCE = 80;
+const BUBBLE_FADE_DURATION = 700;
+const BUBBLE_JITTER = 20;
+
 const WALL_TILE_HEIGHT = 384;
 const SEGMENT_SPACING = WALL_TILE_HEIGHT * 2;
 const SCROLL_DURATION = 700;
@@ -162,6 +172,8 @@ export class HouseCleanScene extends Phaser.Scene {
     this.clouds = [];
     this.sprayHoldTimer = null;
     this.activeSprayDecal = null;
+    this.poopHoldTimer = null;
+    this.activePoopSpot = null;
   }
 
   computeLayout() {
@@ -516,6 +528,7 @@ export class HouseCleanScene extends Phaser.Scene {
     this.sprayDecals = segment.sprayDecals;
     this.dirtSpots = segment.dirtSpots;
     this.stopSprayHold();
+    this.stopPoopHold();
 
     this.drawProgressBar(0);
   }
@@ -533,8 +546,7 @@ export class HouseCleanScene extends Phaser.Scene {
     return spotTypes.map((dirtType, index) => {
       const x = positions[index].x + WINDOW_WIDTH / 2;
       const y = positions[index].y + WINDOW_HEIGHT / 2;
-      const containerX = WINDOW_OFFSET_X - WINDOW_WIDTH / 2 + x;
-      const containerY = -WINDOW_HEIGHT / 2 + y;
+      const { x: containerX, y: containerY } = this.toContainerLocal(x, y);
 
       const image = this.add
         .image(containerX, containerY, dirtType.textureKey)
@@ -547,9 +559,17 @@ export class HouseCleanScene extends Phaser.Scene {
         y,
         cleared: false,
         image,
-        progress: new DirtSpot({ hitsToClean: dirtType.hitsToClean }),
+        progress: this.createDirtSpotProgress(dirtType),
       };
     });
+  }
+
+  createDirtSpotProgress(dirtType) {
+    if (dirtType.interactionType === "hold") {
+      return new HoldProgress({ targetDurationMs: dirtType.holdDurationMs });
+    }
+
+    return new DirtSpot({ hitsToClean: dirtType.hitsToClean });
   }
 
   buildBoardObstruction(container) {
@@ -760,6 +780,7 @@ export class HouseCleanScene extends Phaser.Scene {
       this.toolIcon.setVisible(false);
       this.activeObstruction?.screws?.forEach((screw) => screw.progress.release());
       this.stopSprayHold();
+      this.stopPoopHold();
     });
   }
 
@@ -773,6 +794,10 @@ export class HouseCleanScene extends Phaser.Scene {
 
     if (this.equippedTool.id === "spray-bottle") {
       this.startSprayHold(pointer);
+    }
+
+    if (this.equippedTool.id === "sponge") {
+      this.startPoopHold(pointer);
     }
   }
 
@@ -855,8 +880,7 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
-    const containerX = WINDOW_OFFSET_X - WINDOW_WIDTH / 2 + decal.x;
-    const containerY = -WINDOW_HEIGHT / 2 + decal.y;
+    const { x: containerX, y: containerY } = this.toContainerLocal(decal.x, decal.y);
 
     const sprayPattern = SPRAY_PATTERNS.find((pattern) => pattern.stage === stage);
 
@@ -864,6 +888,110 @@ export class HouseCleanScene extends Phaser.Scene {
       .image(containerX, containerY, sprayPattern.textureKey)
       .setDisplaySize(SPRAY_DECAL_DISPLAY_SIZE, SPRAY_DECAL_DISPLAY_SIZE);
     this.activeContainer.add(decal.image);
+  }
+
+  startPoopHold(pointer) {
+    if (!this.canInteractWithWindow(pointer)) {
+      return;
+    }
+
+    const local = this.toWindowLocal(pointer.x, pointer.y);
+    const spot = this.findCleanablePoopSpotNear(local.x, local.y);
+
+    if (!spot) {
+      return;
+    }
+
+    this.activePoopSpot = spot;
+    this.poopHoldLastTick = this.time.now;
+    this.poopHoldTimer = this.time.addEvent({
+      delay: POOP_HOLD_TICK_INTERVAL,
+      loop: true,
+      callback: () => this.tickPoopHold(),
+    });
+    this.startSpongeVigorousAnimation();
+  }
+
+  findCleanablePoopSpotNear(x, y) {
+    const dirtType = DIRT_TYPES["bird-poop"];
+
+    return this.dirtSpots.find(
+      (spot) =>
+        spot.type === "bird-poop" &&
+        !spot.cleared &&
+        Phaser.Math.Distance.Between(x, y, spot.x, spot.y) <= DIRT_SPOT_HIT_RADIUS &&
+        this.sprayStageAt(spot.x, spot.y) >= dirtType.requiredSprayStage,
+    );
+  }
+
+  tickPoopHold() {
+    const pointer = this.input.activePointer;
+    const local = this.toWindowLocal(pointer.x, pointer.y);
+    const stillHoldingSpot =
+      pointer.isDown &&
+      this.equippedTool.id === "sponge" &&
+      this.canInteractWithWindow(pointer) &&
+      Phaser.Math.Distance.Between(local.x, local.y, this.activePoopSpot.x, this.activePoopSpot.y) <=
+        DIRT_SPOT_HIT_RADIUS;
+
+    if (!stillHoldingSpot) {
+      this.stopPoopHold();
+      return;
+    }
+
+    const now = this.time.now;
+    this.activePoopSpot.progress.trackTime(now - this.poopHoldLastTick);
+    this.poopHoldLastTick = now;
+    this.spawnHoldBubble(this.activePoopSpot);
+
+    if (this.activePoopSpot.progress.isComplete()) {
+      this.clearDirtSpot(this.activePoopSpot);
+      this.stopPoopHold();
+    }
+  }
+
+  stopPoopHold() {
+    this.poopHoldTimer?.remove();
+    this.poopHoldTimer = null;
+    this.activePoopSpot?.progress.release();
+    this.activePoopSpot = null;
+    this.stopSpongeVigorousAnimation();
+  }
+
+  startSpongeVigorousAnimation() {
+    this.spongeVigorTween = this.tweens.add({
+      targets: this.toolIcon,
+      scale: SPONGE_VIGOR_SCALE,
+      duration: SPONGE_VIGOR_DURATION,
+      yoyo: true,
+      repeat: -1,
+    });
+  }
+
+  stopSpongeVigorousAnimation() {
+    this.spongeVigorTween?.stop();
+    this.spongeVigorTween = null;
+    this.toolIcon.setScale(1);
+  }
+
+  spawnHoldBubble(spot) {
+    const bubbleSpec = Phaser.Utils.Array.GetRandom(BUBBLES);
+    const jitterX = Phaser.Math.Between(-BUBBLE_JITTER, BUBBLE_JITTER);
+    const jitterY = Phaser.Math.Between(-BUBBLE_JITTER, BUBBLE_JITTER);
+    const { x: containerX, y: containerY } = this.toContainerLocal(spot.x + jitterX, spot.y + jitterY);
+
+    const bubble = this.add
+      .image(containerX, containerY, bubbleSpec.textureKey)
+      .setDisplaySize(BUBBLE_DISPLAY_SIZE, BUBBLE_DISPLAY_SIZE);
+    this.activeContainer.add(bubble);
+
+    this.tweens.add({
+      targets: bubble,
+      y: bubble.y - BUBBLE_RISE_DISTANCE,
+      alpha: 0,
+      duration: BUBBLE_FADE_DURATION,
+      onComplete: () => bubble.destroy(),
+    });
   }
 
   handlePointerMove(pointer) {
@@ -1190,6 +1318,17 @@ export class HouseCleanScene extends Phaser.Scene {
     return {
       x: Phaser.Math.Clamp(x - this.windowLeft, 0, WINDOW_WIDTH),
       y: Phaser.Math.Clamp(y - WINDOW_TOP, 0, WINDOW_HEIGHT),
+    };
+  }
+
+  // Converts a toWindowLocal-space point (0..WINDOW_WIDTH/HEIGHT, top-left
+  // origin) into the active segment container's own local space (origin at
+  // the window's center) — the same origin the dirtMask render texture itself
+  // is anchored at.
+  toContainerLocal(x, y) {
+    return {
+      x: WINDOW_OFFSET_X - WINDOW_WIDTH / 2 + x,
+      y: -WINDOW_HEIGHT / 2 + y,
     };
   }
 
