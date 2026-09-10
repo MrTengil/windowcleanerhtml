@@ -705,6 +705,7 @@ export class HouseCleanScene extends Phaser.Scene {
     this.toolIcon = this.createToolIcon(this.equippedTool, 0, 0, DRAGGING_TOOL_ICON_SIZE, { withBorder: false })
       .setVisible(false)
       .setDepth(1000);
+    this.toolIconRestingScale = this.toolIcon.scaleX;
   }
 
   openToolSelector() {
@@ -969,7 +970,7 @@ export class HouseCleanScene extends Phaser.Scene {
   startSpongeVigorousAnimation() {
     this.spongeVigorTween = this.tweens.add({
       targets: this.toolIcon,
-      scale: SPONGE_VIGOR_SCALE,
+      scale: this.toolIconRestingScale * SPONGE_VIGOR_SCALE,
       duration: SPONGE_VIGOR_DURATION,
       yoyo: true,
       repeat: -1,
@@ -979,7 +980,7 @@ export class HouseCleanScene extends Phaser.Scene {
   stopSpongeVigorousAnimation() {
     this.spongeVigorTween?.stop();
     this.spongeVigorTween = null;
-    this.toolIcon.setScale(1);
+    this.toolIcon.setScale(this.toolIconRestingScale);
   }
 
   spawnHoldBubble(spot) {
