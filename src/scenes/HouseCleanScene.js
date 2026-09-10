@@ -747,6 +747,10 @@ export class HouseCleanScene extends Phaser.Scene {
       this.rotateToolTowardSweep(pointer);
     }
 
+    if (this.equippedTool.canCleanWindow === false) {
+      return;
+    }
+
     const from = this.toWindowLocal(pointer.prevPosition.x, pointer.prevPosition.y);
     const to = this.toWindowLocal(pointer.x, pointer.y);
 

@@ -32,4 +32,16 @@ describe("config integrity", () => {
       expect(toolIds.has(dirtType.toolId)).toBe(true);
     }
   });
+
+  it("scissors cannot clean the window", () => {
+    const scissors = TOOLS.find((tool) => tool.id === "scissors");
+
+    expect(scissors.canCleanWindow).toBe(false);
+  });
+
+  it("the screwdriver cannot clean the window", () => {
+    const screwdriver = TOOLS.find((tool) => tool.id === "screwdriver");
+
+    expect(screwdriver.canCleanWindow).toBe(false);
+  });
 });
