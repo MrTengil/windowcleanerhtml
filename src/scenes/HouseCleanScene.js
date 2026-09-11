@@ -105,7 +105,7 @@ const DIRT_SPOT_DISPLAY_SIZE = 140;
 const DIRT_SPOT_HIT_RADIUS = 60;
 const DIRT_SPOT_SNAP_RADIUS = 90;
 
-const POOP_HOLD_TICK_INTERVAL = 100;
+const POOP_BUBBLE_INTERVAL = 100;
 const SPONGE_VIGOR_SCALE = 1.15;
 const SPONGE_VIGOR_DURATION = 80;
 // Radius equals the dragging tool icon's own diameter, so the ring's
@@ -179,8 +179,8 @@ export class HouseCleanScene extends Phaser.Scene {
     this.clouds = [];
     this.sprayHoldTimer = null;
     this.activeSprayDecal = null;
-    this.poopHoldTimer = null;
     this.activePoopSpot = null;
+    this.poopBubbleElapsed = 0;
   }
 
   computeLayout() {
@@ -220,6 +220,7 @@ export class HouseCleanScene extends Phaser.Scene {
     this.skyline.y = this.skylineBaseY + this.scroll.offset * SKYLINE_PARALLAX;
 
     this.driftClouds(delta);
+    this.updatePoopHold(delta);
   }
 
   updateWall() {
@@ -943,12 +944,7 @@ export class HouseCleanScene extends Phaser.Scene {
     }
 
     this.activePoopSpot = spot;
-    this.poopHoldLastTick = this.time.now;
-    this.poopHoldTimer = this.time.addEvent({
-      delay: POOP_HOLD_TICK_INTERVAL,
-      loop: true,
-      callback: () => this.tickPoopHold(),
-    });
+    this.poopBubbleElapsed = 0;
     this.startSpongeVigorousAnimation();
     spot.progressGraphics.setVisible(true);
     this.updatePoopProgressVisuals(spot);
@@ -966,7 +962,11 @@ export class HouseCleanScene extends Phaser.Scene {
     );
   }
 
-  tickPoopHold() {
+  updatePoopHold(delta) {
+    if (!this.activePoopSpot) {
+      return;
+    }
+
     const pointer = this.input.activePointer;
     const local = this.toWindowLocal(pointer.x, pointer.y);
     const stillHoldingSpot =
@@ -981,11 +981,14 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
-    const now = this.time.now;
-    this.activePoopSpot.progress.trackTime(now - this.poopHoldLastTick);
-    this.poopHoldLastTick = now;
-    this.spawnHoldBubbles(this.activePoopSpot);
+    this.activePoopSpot.progress.trackTime(delta);
     this.updatePoopProgressVisuals(this.activePoopSpot);
+
+    this.poopBubbleElapsed += delta;
+    if (this.poopBubbleElapsed >= POOP_BUBBLE_INTERVAL) {
+      this.poopBubbleElapsed -= POOP_BUBBLE_INTERVAL;
+      this.spawnHoldBubbles(this.activePoopSpot);
+    }
 
     if (this.activePoopSpot.progress.isComplete()) {
       this.clearDirtSpot(this.activePoopSpot);
@@ -1004,8 +1007,6 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   stopPoopHold() {
-    this.poopHoldTimer?.remove();
-    this.poopHoldTimer = null;
     this.activePoopSpot?.progressGraphics.setVisible(false);
     this.activePoopSpot?.progress.release();
     this.activePoopSpot = null;
