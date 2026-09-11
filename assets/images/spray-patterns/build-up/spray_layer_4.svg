@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+  <!-- Spray residue layer 4 of 8 — additive: stack layers 1..4 in order, on the SAME spot, to build up progressively wetter residue. Do not resize/reposition between layers. -->
+  <defs><filter id="wetBlur4" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5.40"/></filter></defs>
+  <g fill="#DCEFF7" opacity="0.12" filter="url(#wetBlur4)">
+    <path d="M 199.2,136.7 Q 201.0,151.8 201.6,168.9 Q 202.1,186.0 186.2,194.3 Q 170.3,202.6 151.5,202.0 Q 132.7,201.4 130.1,182.8 Q 127.5,164.1 123.3,150.3 Q 119.2,136.4 131.6,129.1 Q 144.1,121.8 156.2,117.3 Q 168.2,112.8 182.8,117.2 Q 197.4,121.5 199.2,136.7 Z"/>
+    <path d="M 194.3,136.5 Q 205.2,150.5 195.0,165.0 Q 184.8,179.6 172.4,192.8 Q 159.9,206.0 139.3,205.5 Q 118.6,205.0 116.1,184.4 Q 113.6,163.7 102.3,146.3 Q 91.0,128.9 105.7,113.9 Q 120.3,98.8 139.5,100.5 Q 158.6,102.3 171.0,112.4 Q 183.3,122.6 194.3,136.5 Z"/>
+    <path d="M 175.2,150.3 Q 174.9,164.7 178.0,181.5 Q 181.0,198.3 165.1,204.3 Q 149.1,210.2 132.3,209.7 Q 115.5,209.1 105.1,195.3 Q 94.8,181.6 97.0,165.6 Q 99.2,149.5 106.3,133.2 Q 113.5,116.9 130.8,120.8 Q 148.1,124.7 161.8,130.3 Q 175.5,135.9 175.2,150.3 Z"/>
+    <path d="M 188.3,123.7 Q 199.0,139.9 193.6,160.5 Q 188.1,181.1 167.3,181.6 Q 146.5,182.1 130.6,182.1 Q 114.6,182.1 103.0,169.7 Q 91.4,157.2 94.5,141.0 Q 97.7,124.8 106.1,111.2 Q 114.6,97.5 130.7,96.7 Q 146.8,95.9 162.2,101.7 Q 177.6,107.5 188.3,123.7 Z"/>
+  </g>
+  <g fill="#DCEFF7">
+    <circle cx="150.4" cy="150.3" r="5.06" opacity="0.67"/>
+    <circle cx="154.5" cy="133.2" r="4.70" opacity="0.58"/>
+    <circle cx="174.9" cy="149.4" r="11.77" opacity="0.75"/>
+    <circle cx="190.8" cy="152.9" r="9.52" opacity="0.64"/>
+  </g>
+  <g stroke="#DCEFF7" stroke-linecap="round" fill="none">
+    <line x1="122.7" y1="203.7" x2="125.2" y2="219.7" stroke-width="6.28" opacity="0.51"/>
+  </g>
+  <g fill="#DCEFF7">
+    <circle cx="112.8" cy="80.6" r="3.99" opacity="0.6"/>
+    <circle cx="230.0" cy="189.2" r="6.87" opacity="0.67"/>
+    <circle cx="216.2" cy="182.8" r="3.85" opacity="0.67"/>
+    <circle cx="240.6" cy="65.9" r="3.11" opacity="0.36"/>
+    <circle cx="204.3" cy="56.5" r="4.48" opacity="0.64"/>
+    <circle cx="112.5" cy="95.6" r="6.93" opacity="0.46"/>
+    <circle cx="83.1" cy="39.5" r="2.16" opacity="0.34"/>
+    <circle cx="225.2" cy="209.9" r="3.38" opacity="0.53"/>
+    <circle cx="135.2" cy="78.1" r="5.72" opacity="0.44"/>
+    <circle cx="24.3" cy="159.1" r="4.72" opacity="0.34"/>
+  </g>
+  <g fill="#DCEFF7">
+    <circle cx="59.1" cy="98.9" r="2.31" opacity="0.2"/>
+    <circle cx="147.6" cy="54.8" r="2.68" opacity="0.17"/>
+    <circle cx="149.3" cy="231.9" r="1.60" opacity="0.14"/>
+    <circle cx="30.5" cy="122.6" r="1.59" opacity="0.16"/>
+    <circle cx="30.4" cy="161.9" r="3.25" opacity="0.21"/>
+    <circle cx="133.4" cy="228.9" r="1.61" opacity="0.16"/>
+    <circle cx="182.2" cy="217.9" r="2.32" opacity="0.17"/>
+  </g>
+</svg>

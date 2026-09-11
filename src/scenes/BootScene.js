@@ -36,7 +36,7 @@ export class BootScene extends Phaser.Scene {
     });
 
     SPRAY_PATTERNS.forEach((sprayPattern) => {
-      this.load.image(sprayPattern.textureKey, `assets/images/spray-patterns/${sprayPattern.file}`);
+      this.load.image(sprayPattern.textureKey, `assets/images/spray-patterns/build-up/${sprayPattern.file}`);
     });
 
     Object.values(DIRT_TYPES)

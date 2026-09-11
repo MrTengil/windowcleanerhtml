@@ -10,7 +10,7 @@ export const DIRT_TYPES = {
     id: "bird-poop",
     interactionType: "hold",
     toolIds: ["sponge"],
-    requiredSprayStage: 4,
+    requiredSprayStage: 8,
     holdDurationMs: 3000,
     color: 0xf5f5f5,
     textureKey: "dirt-bird-poop",

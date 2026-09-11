@@ -95,7 +95,7 @@ const SWEEP_TIME_CONSTANT = 100;
 const DRAGGING_TOOL_ICON_SIZE = 100;
 
 const SPRAY_STAGE_DURATION = 200;
-const SPRAY_MAX_STAGE = 4;
+const SPRAY_MAX_STAGE = 8;
 const SPRAY_SPOT_RADIUS = 85;
 const SPRAY_DECAL_DISPLAY_SIZE = 170;
 
@@ -905,7 +905,7 @@ export class HouseCleanScene extends Phaser.Scene {
       return existing;
     }
 
-    const decal = { x, y, stage: 0, image: null };
+    const decal = { x, y, stage: 0, layerImages: [] };
     this.sprayDecals.push(decal);
 
     return decal;
@@ -916,21 +916,28 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
-    decal.stage = stage;
-    decal.image?.destroy();
-
-    if (stage === 0) {
-      return;
+    for (let layer = decal.stage + 1; layer <= stage; layer++) {
+      this.addSprayLayer(decal, layer);
     }
 
+    decal.stage = stage;
+  }
+
+  // Each layer is kept, not swapped — the build-up assets are designed to
+  // stack on the same spot (see their own doc comments), each layer getting
+  // its own random rotation so the accumulated residue reads as organic
+  // rather than identical rings stamped on top of each other.
+  addSprayLayer(decal, layer) {
     const { x: containerX, y: containerY } = this.toContainerLocal(decal.x, decal.y);
+    const sprayLayer = SPRAY_PATTERNS.find((pattern) => pattern.stage === layer);
 
-    const sprayPattern = SPRAY_PATTERNS.find((pattern) => pattern.stage === stage);
+    const image = this.add
+      .image(containerX, containerY, sprayLayer.textureKey)
+      .setDisplaySize(SPRAY_DECAL_DISPLAY_SIZE, SPRAY_DECAL_DISPLAY_SIZE)
+      .setRotation(Phaser.Math.FloatBetween(0, Math.PI * 2));
 
-    decal.image = this.add
-      .image(containerX, containerY, sprayPattern.textureKey)
-      .setDisplaySize(SPRAY_DECAL_DISPLAY_SIZE, SPRAY_DECAL_DISPLAY_SIZE);
-    this.activeContainer.add(decal.image);
+    this.activeContainer.add(image);
+    decal.layerImages.push(image);
   }
 
   startPoopHold(pointer) {
@@ -1433,7 +1440,7 @@ export class HouseCleanScene extends Phaser.Scene {
         continue;
       }
 
-      decal.image?.destroy();
+      decal.layerImages.forEach((image) => image.destroy());
       this.sprayDecals.splice(i, 1);
 
       if (this.activeSprayDecal === decal) {
