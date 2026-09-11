@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 165" width="150" height="165">
+  <!-- Sticker peel stage 4: fully removed, only sticky residue left behind -->
+<g>
+<defs><filter id="rblur42" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.2"/></filter></defs>
+<ellipse cx="75.0" cy="82.0" rx="31.9" ry="29.0" fill="#FFFFFF" opacity="0.47" filter="url(#rblur42)"/>
+<ellipse cx="72.2" cy="78.6" rx="4.7" ry="3.2" fill="#FFFFFF" opacity="0.44"/>
+<ellipse cx="83.2" cy="75.4" rx="5.5" ry="3.4" fill="#FAFAF6" opacity="0.35"/>
+<ellipse cx="44.0" cy="58.9" rx="7.3" ry="6.4" fill="#FFFFFF" opacity="0.34"/>
+<ellipse cx="32.6" cy="55.4" rx="3.0" ry="2.8" fill="#FFFFFF" opacity="0.37"/>
+<ellipse cx="106.5" cy="128.6" rx="5.0" ry="3.2" fill="#FFFFFF" opacity="0.37"/>
+<ellipse cx="62.3" cy="101.0" rx="3.3" ry="2.6" fill="#FFFFFF" opacity="0.50"/>
+<ellipse cx="47.3" cy="108.5" rx="8.0" ry="6.8" fill="#F2F2EC" opacity="0.42"/>
+<ellipse cx="73.1" cy="75.6" rx="4.4" ry="3.1" fill="#FFFFFF" opacity="0.48"/>
+<ellipse cx="94.7" cy="60.1" rx="5.7" ry="5.3" fill="#FAFAF6" opacity="0.38"/>
+<ellipse cx="80.8" cy="104.3" rx="8.6" ry="7.4" fill="#FAFAF6" opacity="0.41"/>
+<ellipse cx="76.1" cy="115.8" rx="4.6" ry="4.5" fill="#FAFAF6" opacity="0.44"/>
+<ellipse cx="101.8" cy="41.5" rx="4.4" ry="2.7" fill="#F2F2EC" opacity="0.38"/>
+<ellipse cx="124.8" cy="104.0" rx="6.4" ry="5.7" fill="#FAFAF6" opacity="0.44"/>
+<ellipse cx="31.8" cy="115.2" rx="5.8" ry="4.1" fill="#FAFAF6" opacity="0.46"/>
+<ellipse cx="29.1" cy="70.5" rx="5.6" ry="4.6" fill="#F2F2EC" opacity="0.34"/>
+<ellipse cx="111.2" cy="81.4" rx="3.5" ry="2.2" fill="#FFFFFF" opacity="0.33"/>
+<ellipse cx="98.7" cy="119.4" rx="6.6" ry="5.0" fill="#FFFFFF" opacity="0.41"/>
+<ellipse cx="126.4" cy="72.6" rx="3.1" ry="2.7" fill="#F2F2EC" opacity="0.46"/>
+<ellipse cx="61.8" cy="102.7" rx="3.9" ry="2.4" fill="#F2F2EC" opacity="0.50"/>
+<ellipse cx="77.7" cy="46.0" rx="3.6" ry="3.1" fill="#FAFAF6" opacity="0.33"/>
+<rect x="75.2" y="48.6" width="4.4" height="3.1" fill="#FFFFFF" opacity="0.77" transform="rotate(191 77.5 50.8)"/>
+<rect x="92.5" y="80.8" width="2.5" height="1.8" fill="#FFFFFF" opacity="0.77" transform="rotate(334 93.8 82.1)"/>
+<rect x="108.3" y="47.1" width="3.3" height="2.3" fill="#FFFFFF" opacity="0.77" transform="rotate(21 109.9 48.7)"/>
+<rect x="113.2" y="42.5" width="2.7" height="1.9" fill="#FFFFFF" opacity="0.77" transform="rotate(175 114.6 43.9)"/>
+<rect x="112.8" y="98.4" width="4.4" height="3.1" fill="#FFFFFF" opacity="0.77" transform="rotate(46 115.0 100.6)"/>
+<rect x="41.9" y="85.4" width="3.2" height="2.2" fill="#FFFFFF" opacity="0.77" transform="rotate(314 43.5 86.9)"/>
+<rect x="62.2" y="85.8" width="3.8" height="2.7" fill="#FFFFFF" opacity="0.77" transform="rotate(263 64.1 87.7)"/>
+<rect x="78.0" y="96.7" width="5.0" height="3.5" fill="#FFFFFF" opacity="0.77" transform="rotate(234 80.5 99.2)"/>
+<circle cx="52.8" cy="91.1" r="0.9" fill="#E4E4DC" opacity="0.47"/>
+<circle cx="77.5" cy="97.5" r="1.3" fill="#E4E4DC" opacity="0.47"/>
+<circle cx="76.3" cy="92.1" r="0.9" fill="#E4E4DC" opacity="0.47"/>
+<circle cx="67.8" cy="74.2" r="1.5" fill="#E4E4DC" opacity="0.47"/>
+</g>
+</svg>

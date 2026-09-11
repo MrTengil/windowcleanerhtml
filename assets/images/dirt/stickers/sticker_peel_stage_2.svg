@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 165" width="150" height="165">
+  <!-- Sticker peel stage 2: about half peeled, folded back on itself -->
+
+  <defs>
+    <clipPath id="stuck2"><path d="M 69.94,139.78 L 67.21,126.04 L 65.46,112.13 L 65.32,97.93 L 60.00,84.64 L 57.83,70.80 L 55.90,56.92 L 50.93,43.58 L 50.49,29.43  50.49,29.43 L 58.77,26.32 L 67.43,24.50 L 76.27,24.01 L 85.07,24.88 L 93.64,27.08 L 101.78,30.55 L 109.30,35.23 L 116.01,40.99 L 121.77,47.70 L 126.45,55.22 L 129.92,63.36 L 132.12,71.93 L 132.99,80.73 L 132.50,89.57 L 130.68,98.23 L 127.57,106.51 L 123.23,114.22 L 117.76,121.18 L 111.30,127.23 L 104.00,132.23 L 96.02,136.06 L 87.55,138.63 L 78.79,139.88 L 69.94,139.78  Z"/></clipPath>
+    <clipPath id="peel2"><path d="M 69.94,139.78 L 67.21,126.04 L 65.46,112.13 L 65.32,97.93 L 60.00,84.64 L 57.83,70.80 L 55.90,56.92 L 50.93,43.58 L 50.49,29.43  50.49,29.43 L 44.91,32.42 L 39.69,35.99 L 34.89,40.10 L 30.57,44.72 L 26.77,49.78 L 23.55,55.22 L 20.94,60.98 L 18.98,66.99 L 17.68,73.18 L 17.06,79.47 L 17.12,85.79 L 17.88,92.07 L 19.32,98.23 L 21.41,104.20 L 24.15,109.90 L 27.49,115.27 L 31.39,120.24 L 35.82,124.76 L 40.70,128.77 L 46.00,132.23 L 51.64,135.09 L 57.56,137.32 L 63.68,138.89 L 69.94,139.78  Z"/></clipPath>
+  </defs>
+  <g clip-path="url(#stuck2)">
+    
+      <circle cx="75" cy="82" r="58" fill="#FFFFFF"/>
+      <circle cx="75" cy="82" r="54" fill="#F2A63D"/>
+      <circle cx="75" cy="82" r="49" fill="#29C1D6"/>
+      <circle cx="75" cy="82" r="49" fill="none" stroke="#1F4B44" stroke-width="1.5" opacity="0.5"/>
+      <circle cx="75" cy="82" r="58" fill="none" stroke="#1F4B44" stroke-width="1.6" opacity="0.6"/>
+      <g>
+        <circle cx="75" cy="76" r="19" fill="#FFFFFF" opacity="0.95"/>
+        <circle cx="69" cy="69" r="4.5" fill="#FFFFFF" opacity="0.75"/>
+        <path d="M 66,73 Q 69,78 72,73" stroke="#1F4B44" stroke-width="2.1" fill="none" stroke-linecap="round"/>
+        <path d="M 78,73 Q 81,78 84,73" stroke="#1F4B44" stroke-width="2.1" fill="none" stroke-linecap="round"/>
+        <path d="M 68,84 Q 75,91 82,84" stroke="#1F4B44" stroke-width="2.3" fill="none" stroke-linecap="round"/>
+        <circle cx="63" cy="82" r="2.8" fill="#FF9EC0" opacity="0.7"/>
+        <circle cx="87" cy="82" r="2.8" fill="#FF9EC0" opacity="0.7"/>
+      </g>
+      <defs><path id="textArc" d="M 35,106 A 40,40 0 0,1 115,106"/></defs>
+      <text font-family="Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#FFFFFF" letter-spacing="1">
+        <textPath href="#textArc" startOffset="50%" text-anchor="middle">SCRUB CLUB</textPath>
+      </text>
+      <text x="75" y="124" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#FFFFFF" text-anchor="middle" opacity="0.9">EST. NEVER</text>
+    
+  </g>
+  <g clip-path="url(#stuck2)">
+    <g>
+<ellipse cx="86.4" cy="101.2" rx="6.8" ry="5.4" fill="#FAFAF6" opacity="0.30"/>
+<ellipse cx="47.1" cy="86.5" rx="4.1" ry="3.3" fill="#FFFFFF" opacity="0.18"/>
+<ellipse cx="89.6" cy="75.4" rx="3.9" ry="3.5" fill="#FAFAF6" opacity="0.26"/>
+<ellipse cx="48.3" cy="93.2" rx="7.6" ry="5.8" fill="#FFFFFF" opacity="0.18"/>
+<ellipse cx="66.5" cy="97.6" rx="3.7" ry="3.6" fill="#F2F2EC" opacity="0.18"/>
+<ellipse cx="74.7" cy="76.7" rx="7.9" ry="4.8" fill="#FAFAF6" opacity="0.24"/>
+<rect x="65.8" y="92.2" width="3.0" height="2.1" fill="#FFFFFF" opacity="0.45" transform="rotate(13 67.3 93.7)"/>
+<rect x="77.3" y="74.7" width="4.5" height="3.1" fill="#FFFFFF" opacity="0.45" transform="rotate(75 79.5 76.9)"/>
+<circle cx="95.3" cy="78.0" r="1.4" fill="#E4E4DC" opacity="0.28"/>
+<circle cx="76.1" cy="68.6" r="1.4" fill="#E4E4DC" opacity="0.28"/>
+<circle cx="82.9" cy="89.7" r="1.5" fill="#E4E4DC" opacity="0.28"/>
+<circle cx="81.5" cy="102.4" r="1.5" fill="#E4E4DC" opacity="0.28"/>
+</g>
+  </g>
+  <g transform="translate(69.94 139.78) rotate(-100.00) scale(1,-1) rotate(100.00) translate(-69.94 -139.78)">
+    <g clip-path="url(#peel2)">
+      <rect x="-20" y="-20" width="190" height="205" fill="#FFFFFF"/>
+      <g>
+<ellipse cx="87.8" cy="78.6" rx="3.1" ry="3.1" fill="#FAFAF6" opacity="0.53"/>
+<ellipse cx="71.9" cy="34.4" rx="7.8" ry="4.9" fill="#F2F2EC" opacity="0.59"/>
+<ellipse cx="59.5" cy="115.1" rx="8.6" ry="7.5" fill="#FFFFFF" opacity="0.53"/>
+<ellipse cx="120.6" cy="96.3" rx="6.5" ry="4.7" fill="#FAFAF6" opacity="0.40"/>
+<ellipse cx="100.6" cy="103.6" rx="7.4" ry="7.3" fill="#FFFFFF" opacity="0.52"/>
+<ellipse cx="59.6" cy="68.9" rx="8.7" ry="6.3" fill="#FAFAF6" opacity="0.42"/>
+<ellipse cx="69.8" cy="122.0" rx="5.6" ry="4.1" fill="#FFFFFF" opacity="0.45"/>
+<ellipse cx="74.8" cy="103.6" rx="8.3" ry="6.3" fill="#FAFAF6" opacity="0.43"/>
+<ellipse cx="49.9" cy="107.5" rx="4.8" ry="4.0" fill="#FFFFFF" opacity="0.54"/>
+<ellipse cx="98.2" cy="65.0" rx="3.5" ry="2.8" fill="#FFFFFF" opacity="0.46"/>
+<ellipse cx="34.4" cy="110.4" rx="8.7" ry="7.0" fill="#FFFFFF" opacity="0.35"/>
+<ellipse cx="59.0" cy="86.2" rx="3.2" ry="2.4" fill="#FAFAF6" opacity="0.43"/>
+<ellipse cx="64.8" cy="94.8" rx="3.2" ry="2.6" fill="#FAFAF6" opacity="0.51"/>
+<ellipse cx="88.4" cy="91.9" rx="3.7" ry="2.5" fill="#FFFFFF" opacity="0.36"/>
+<rect x="100.5" y="105.9" width="2.8" height="2.0" fill="#FFFFFF" opacity="0.90" transform="rotate(102 101.9 107.3)"/>
+<rect x="55.1" y="39.2" width="3.7" height="2.6" fill="#FFFFFF" opacity="0.90" transform="rotate(24 56.9 41.0)"/>
+<rect x="62.5" y="32.0" width="2.8" height="1.9" fill="#FFFFFF" opacity="0.90" transform="rotate(291 63.8 33.4)"/>
+<rect x="73.2" y="86.7" width="3.0" height="2.1" fill="#FFFFFF" opacity="0.90" transform="rotate(126 74.7 88.2)"/>
+<rect x="77.6" y="82.0" width="4.1" height="2.9" fill="#FFFFFF" opacity="0.90" transform="rotate(215 79.7 84.0)"/>
+<rect x="70.8" y="71.9" width="2.7" height="1.9" fill="#FFFFFF" opacity="0.90" transform="rotate(69 72.1 73.2)"/>
+<circle cx="57.1" cy="44.6" r="1.2" fill="#E4E4DC" opacity="0.55"/>
+<circle cx="72.2" cy="82.2" r="0.8" fill="#E4E4DC" opacity="0.55"/>
+<circle cx="75.4" cy="57.7" r="1.3" fill="#E4E4DC" opacity="0.55"/>
+<circle cx="71.0" cy="84.8" r="1.5" fill="#E4E4DC" opacity="0.55"/>
+</g>
+      <path d="M 50.49,29.43 L 58.77,26.32 L 67.43,24.50 L 76.27,24.01 L 85.07,24.88 L 93.64,27.08 L 101.78,30.55 L 109.30,35.23 L 116.01,40.99 L 121.77,47.70 L 126.45,55.22 L 129.92,63.36 L 132.12,71.93 L 132.99,80.73 L 132.50,89.57 L 130.68,98.23 L 127.57,106.51 L 123.23,114.22 L 117.76,121.18 L 111.30,127.23 L 104.00,132.23 L 96.02,136.06 L 87.55,138.63 L 78.79,139.88 L 69.94,139.78 " fill="none" stroke="#F2A63D" stroke-width="5" opacity="0.9"/>
+      <path d="M 50.49,29.43 L 58.77,26.32 L 67.43,24.50 L 76.27,24.01 L 85.07,24.88 L 93.64,27.08 L 101.78,30.55 L 109.30,35.23 L 116.01,40.99 L 121.77,47.70 L 126.45,55.22 L 129.92,63.36 L 132.12,71.93 L 132.99,80.73 L 132.50,89.57 L 130.68,98.23 L 127.57,106.51 L 123.23,114.22 L 117.76,121.18 L 111.30,127.23 L 104.00,132.23 L 96.02,136.06 L 87.55,138.63 L 78.79,139.88 L 69.94,139.78 " fill="none" stroke="#1F4B44" stroke-width="1.6" opacity="0.6"/>
+    </g>
+  </g>
+  <path d="M 69.94,139.78 L 67.21,126.04 L 65.46,112.13 L 65.32,97.93 L 60.00,84.64 L 57.83,70.80 L 55.90,56.92 L 50.93,43.58 L 50.49,29.43 " stroke="#1F4B44" stroke-width="1" opacity="0.35" fill="none"/>
+
+</svg>

@@ -6,7 +6,7 @@ export const HOUSES = [
     difficulty: "Low",
     color: 0xa0522d,
     enabled: true,
-    dirtTypeIds: ["dust", "bird-poop", "hand-prints"],
+    dirtTypeIds: ["dust", "bird-poop", "hand-prints", "sticker"],
     liftId: "gondola",
     wallTextureKey: "brick-town-wall",
     groundTextureKey: "brick-town-ground",

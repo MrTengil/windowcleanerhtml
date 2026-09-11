@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 165" width="150" height="165">
+  <!-- Sticker peel stage 1: fully intact on the glass -->
+
+      <circle cx="75" cy="82" r="58" fill="#FFFFFF"/>
+      <circle cx="75" cy="82" r="54" fill="#F2A63D"/>
+      <circle cx="75" cy="82" r="49" fill="#29C1D6"/>
+      <circle cx="75" cy="82" r="49" fill="none" stroke="#1F4B44" stroke-width="1.5" opacity="0.5"/>
+      <circle cx="75" cy="82" r="58" fill="none" stroke="#1F4B44" stroke-width="1.6" opacity="0.6"/>
+      <g>
+        <circle cx="75" cy="76" r="19" fill="#FFFFFF" opacity="0.95"/>
+        <circle cx="69" cy="69" r="4.5" fill="#FFFFFF" opacity="0.75"/>
+        <path d="M 66,73 Q 69,78 72,73" stroke="#1F4B44" stroke-width="2.1" fill="none" stroke-linecap="round"/>
+        <path d="M 78,73 Q 81,78 84,73" stroke="#1F4B44" stroke-width="2.1" fill="none" stroke-linecap="round"/>
+        <path d="M 68,84 Q 75,91 82,84" stroke="#1F4B44" stroke-width="2.3" fill="none" stroke-linecap="round"/>
+        <circle cx="63" cy="82" r="2.8" fill="#FF9EC0" opacity="0.7"/>
+        <circle cx="87" cy="82" r="2.8" fill="#FF9EC0" opacity="0.7"/>
+      </g>
+      <defs><path id="textArc" d="M 35,106 A 40,40 0 0,1 115,106"/></defs>
+      <text font-family="Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#FFFFFF" letter-spacing="1">
+        <textPath href="#textArc" startOffset="50%" text-anchor="middle">SCRUB CLUB</textPath>
+      </text>
+      <text x="75" y="124" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#FFFFFF" text-anchor="middle" opacity="0.9">EST. NEVER</text>
+    
+</svg>

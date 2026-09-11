@@ -16,6 +16,7 @@ import { computeTiltedBoardWidth } from "../utils/boardTilt.js";
 import { CLOUDS, CLOUD_FIRST_FLOOR } from "../config/clouds.js";
 import { SPRAY_PATTERNS } from "../config/sprayPatterns.js";
 import { computeSprayStage } from "../utils/computeSprayStage.js";
+import { computeStickerStage } from "../utils/computeStickerStage.js";
 import { formatFloorLabel } from "../ui/HUD.js";
 
 const CANVAS_HEIGHT = 1560;
@@ -542,7 +543,9 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildDirtSpots(container) {
-    const spotTypes = this.house.dirtTypeIds.map((id) => DIRT_TYPES[id]).filter((dirtType) => dirtType.textureKey);
+    const spotTypes = this.house.dirtTypeIds
+      .map((id) => DIRT_TYPES[id])
+      .filter((dirtType) => dirtType.textureKey || dirtType.stages);
 
     const positions = scatterPositions({
       count: spotTypes.length,
@@ -556,8 +559,9 @@ export class HouseCleanScene extends Phaser.Scene {
       const y = positions[index].y + WINDOW_HEIGHT / 2;
       const { x: containerX, y: containerY } = this.toContainerLocal(x, y);
 
+      const initialTextureKey = dirtType.textureKey ?? dirtType.stages[0].textureKey;
       const image = this.add
-        .image(containerX, containerY, dirtType.textureKey)
+        .image(containerX, containerY, initialTextureKey)
         .setDisplaySize(DIRT_SPOT_DISPLAY_SIZE, DIRT_SPOT_DISPLAY_SIZE);
       container.add(image);
 
@@ -1476,11 +1480,29 @@ export class HouseCleanScene extends Phaser.Scene {
       }
 
       spot.progress.registerTap();
+      this.updateWipeStageImage(spot, dirtType);
 
       if (spot.progress.isClean()) {
         this.clearDirtSpot(spot);
       }
     }
+  }
+
+  // Some wipe-type dirt (stickers) shows progress by swapping its own
+  // sprite through a sequence of stage images instead of a progress bar;
+  // hand-prints declares no `stages`, so this is a no-op for it.
+  updateWipeStageImage(spot, dirtType) {
+    if (!dirtType.stages) {
+      return;
+    }
+
+    const stage = computeStickerStage({
+      hitsRemaining: spot.progress.hitsRemaining,
+      hitsToClean: dirtType.hitsToClean,
+      stageCount: dirtType.stages.length,
+    });
+
+    spot.image.setTexture(dirtType.stages[stage - 1].textureKey);
   }
 
   sprayStageAt(x, y) {

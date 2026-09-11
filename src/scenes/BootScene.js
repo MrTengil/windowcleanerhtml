@@ -45,6 +45,12 @@ export class BootScene extends Phaser.Scene {
         this.load.image(dirtType.textureKey, `assets/images/dirt/${dirtType.file}`);
       });
 
+    Object.values(DIRT_TYPES)
+      .flatMap((dirtType) => dirtType.stages ?? [])
+      .forEach((stage) => {
+        this.load.image(stage.textureKey, `assets/images/dirt/${stage.file}`);
+      });
+
     BUBBLES.forEach((bubble) => {
       this.load.image(bubble.textureKey, `assets/images/bubbles/${bubble.file}`);
     });

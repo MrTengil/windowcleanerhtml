@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 165" width="150" height="165">
+  <!-- Sticker peel stage 3: only a small torn corner still stuck, rest is residue -->
+
+  <g>
+<defs><filter id="rblur32" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.2"/></filter></defs>
+<ellipse cx="75.0" cy="82.0" rx="30.3" ry="27.5" fill="#FFFFFF" opacity="0.55" filter="url(#rblur32)"/>
+<ellipse cx="91.5" cy="90.7" rx="4.8" ry="4.6" fill="#FFFFFF" opacity="0.36"/>
+<ellipse cx="99.3" cy="88.0" rx="5.0" ry="3.1" fill="#FFFFFF" opacity="0.44"/>
+<ellipse cx="120.3" cy="82.2" rx="3.8" ry="2.3" fill="#FAFAF6" opacity="0.56"/>
+<ellipse cx="92.2" cy="76.8" rx="3.5" ry="2.3" fill="#FFFFFF" opacity="0.53"/>
+<ellipse cx="46.6" cy="93.5" rx="8.5" ry="7.0" fill="#FAFAF6" opacity="0.39"/>
+<ellipse cx="55.8" cy="130.7" rx="4.0" ry="3.7" fill="#F2F2EC" opacity="0.49"/>
+<ellipse cx="34.2" cy="61.0" rx="6.5" ry="4.5" fill="#F2F2EC" opacity="0.37"/>
+<ellipse cx="49.6" cy="40.3" rx="4.7" ry="4.2" fill="#FFFFFF" opacity="0.35"/>
+<ellipse cx="81.6" cy="96.0" rx="8.9" ry="8.5" fill="#FAFAF6" opacity="0.52"/>
+<ellipse cx="97.7" cy="89.1" rx="5.3" ry="3.6" fill="#FFFFFF" opacity="0.47"/>
+<ellipse cx="39.9" cy="81.0" rx="5.0" ry="3.7" fill="#FFFFFF" opacity="0.59"/>
+<ellipse cx="100.6" cy="52.1" rx="6.2" ry="4.9" fill="#FAFAF6" opacity="0.45"/>
+<ellipse cx="50.9" cy="68.7" rx="8.0" ry="7.8" fill="#FAFAF6" opacity="0.50"/>
+<ellipse cx="92.7" cy="45.5" rx="3.8" ry="2.7" fill="#FFFFFF" opacity="0.47"/>
+<ellipse cx="75.4" cy="82.3" rx="8.1" ry="5.4" fill="#F2F2EC" opacity="0.54"/>
+<ellipse cx="58.1" cy="91.7" rx="5.4" ry="5.4" fill="#FFFFFF" opacity="0.39"/>
+<ellipse cx="68.6" cy="89.2" rx="7.3" ry="7.2" fill="#FAFAF6" opacity="0.38"/>
+<ellipse cx="67.3" cy="61.8" rx="7.1" ry="5.3" fill="#FFFFFF" opacity="0.56"/>
+<ellipse cx="127.5" cy="93.6" rx="4.1" ry="2.5" fill="#FAFAF6" opacity="0.52"/>
+<ellipse cx="77.8" cy="54.3" rx="3.7" ry="2.7" fill="#FAFAF6" opacity="0.41"/>
+<ellipse cx="45.5" cy="93.2" rx="8.4" ry="5.1" fill="#F2F2EC" opacity="0.35"/>
+<ellipse cx="98.9" cy="93.0" rx="7.4" ry="4.8" fill="#FAFAF6" opacity="0.59"/>
+<rect x="101.0" y="49.5" width="2.7" height="1.9" fill="#FFFFFF" opacity="0.90" transform="rotate(212 102.4 50.9)"/>
+<rect x="101.4" y="79.3" width="2.7" height="1.9" fill="#FFFFFF" opacity="0.90" transform="rotate(66 102.7 80.6)"/>
+<rect x="127.1" y="76.4" width="3.1" height="2.2" fill="#FFFFFF" opacity="0.90" transform="rotate(115 128.7 77.9)"/>
+<rect x="67.4" y="53.2" width="3.0" height="2.1" fill="#FFFFFF" opacity="0.90" transform="rotate(354 68.9 54.7)"/>
+<rect x="59.1" y="66.9" width="2.6" height="1.8" fill="#FFFFFF" opacity="0.90" transform="rotate(184 60.4 68.2)"/>
+<rect x="73.8" y="70.8" width="2.7" height="1.9" fill="#FFFFFF" opacity="0.90" transform="rotate(261 75.1 72.2)"/>
+<rect x="91.4" y="70.2" width="3.7" height="2.6" fill="#FFFFFF" opacity="0.90" transform="rotate(229 93.2 72.0)"/>
+<rect x="66.4" y="79.5" width="3.2" height="2.2" fill="#FFFFFF" opacity="0.90" transform="rotate(74 68.0 81.1)"/>
+<rect x="74.8" y="84.9" width="3.5" height="2.4" fill="#FFFFFF" opacity="0.90" transform="rotate(79 76.6 86.6)"/>
+<circle cx="83.2" cy="70.4" r="1.6" fill="#E4E4DC" opacity="0.55"/>
+<circle cx="79.4" cy="71.0" r="0.9" fill="#E4E4DC" opacity="0.55"/>
+<circle cx="56.2" cy="72.9" r="1.2" fill="#E4E4DC" opacity="0.55"/>
+<circle cx="91.7" cy="98.4" r="1.4" fill="#E4E4DC" opacity="0.55"/>
+</g>
+  <defs><clipPath id="frag3"><path d="M 55.16,27.50 L 66.31,35.93 L 74.58,46.78 L 81.96,58.37 L 89.29,70.01 L 100.73,78.20 L 109.61,88.53 L 117.79,99.46 L 125.23,111.00  125.23,111.00 L 127.92,105.74 L 130.06,100.24 L 131.63,94.55 L 132.61,88.73 L 132.99,82.84 L 132.78,76.94 L 131.97,71.10 L 130.56,65.37 L 128.59,59.80 L 126.05,54.47 L 122.99,49.43 L 119.43,44.72 L 115.41,40.40 L 110.97,36.50 L 106.16,33.08 L 101.03,30.17 L 95.63,27.79 L 90.01,25.98 L 84.24,24.74 L 78.37,24.10 L 72.47,24.06 L 66.59,24.61 L 60.80,25.76 L 55.16,27.50  Z"/></clipPath></defs>
+  <g clip-path="url(#frag3)">
+    
+      <circle cx="75" cy="82" r="58" fill="#FFFFFF"/>
+      <circle cx="75" cy="82" r="54" fill="#F2A63D"/>
+      <circle cx="75" cy="82" r="49" fill="#29C1D6"/>
+      <circle cx="75" cy="82" r="49" fill="none" stroke="#1F4B44" stroke-width="1.5" opacity="0.5"/>
+      <circle cx="75" cy="82" r="58" fill="none" stroke="#1F4B44" stroke-width="1.6" opacity="0.6"/>
+      <g>
+        <circle cx="75" cy="76" r="19" fill="#FFFFFF" opacity="0.95"/>
+        <circle cx="69" cy="69" r="4.5" fill="#FFFFFF" opacity="0.75"/>
+        <path d="M 66,73 Q 69,78 72,73" stroke="#1F4B44" stroke-width="2.1" fill="none" stroke-linecap="round"/>
+        <path d="M 78,73 Q 81,78 84,73" stroke="#1F4B44" stroke-width="2.1" fill="none" stroke-linecap="round"/>
+        <path d="M 68,84 Q 75,91 82,84" stroke="#1F4B44" stroke-width="2.3" fill="none" stroke-linecap="round"/>
+        <circle cx="63" cy="82" r="2.8" fill="#FF9EC0" opacity="0.7"/>
+        <circle cx="87" cy="82" r="2.8" fill="#FF9EC0" opacity="0.7"/>
+      </g>
+      <defs><path id="textArc" d="M 35,106 A 40,40 0 0,1 115,106"/></defs>
+      <text font-family="Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#FFFFFF" letter-spacing="1">
+        <textPath href="#textArc" startOffset="50%" text-anchor="middle">SCRUB CLUB</textPath>
+      </text>
+      <text x="75" y="124" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#FFFFFF" text-anchor="middle" opacity="0.9">EST. NEVER</text>
+    
+  </g>
+  <path d="M 55.16,27.50 L 66.31,35.93 L 74.58,46.78 L 81.96,58.37 L 89.29,70.01 L 100.73,78.20 L 109.61,88.53 L 117.79,99.46 L 125.23,111.00 " stroke="#1F4B44" stroke-width="1" opacity="0.4" fill="none"/>
+
+</svg>

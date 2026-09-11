@@ -26,4 +26,18 @@ export const DIRT_TYPES = {
     textureKey: "dirt-hand-prints",
     file: "hand_prints.svg",
   },
+  sticker: {
+    id: "sticker",
+    interactionType: "wipe",
+    toolIds: ["squeegee"],
+    requiredSprayStage: 0,
+    hitsToClean: 16,
+    color: 0xdba844,
+    stages: [
+      { textureKey: "sticker-stage-1", file: "stickers/sticker_peel_stage_1.svg" },
+      { textureKey: "sticker-stage-2", file: "stickers/sticker_peel_stage_2.svg" },
+      { textureKey: "sticker-stage-3", file: "stickers/sticker_peel_stage_3.svg" },
+      { textureKey: "sticker-stage-4", file: "stickers/sticker_peel_stage_4.svg" },
+    ],
+  },
 };
