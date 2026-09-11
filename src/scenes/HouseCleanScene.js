@@ -818,6 +818,8 @@ export class HouseCleanScene extends Phaser.Scene {
     if (this.equippedTool.id === "sponge") {
       this.startPoopHold(pointer);
     }
+
+    this.updateToolIcon(pointer);
   }
 
   canInteractWithWindow(pointer) {
@@ -1055,13 +1057,8 @@ export class HouseCleanScene extends Phaser.Scene {
     });
   }
 
-  handlePointerMove(pointer) {
-    if (this.isTransitioning || !pointer.isDown) {
-      this.toolIcon.setVisible(false);
-      return;
-    }
-
-    if (this.toolSelectorObjects) {
+  updateToolIcon(pointer) {
+    if (this.isTransitioning || !pointer.isDown || this.toolSelectorObjects) {
       this.toolIcon.setVisible(false);
       return;
     }
@@ -1071,15 +1068,26 @@ export class HouseCleanScene extends Phaser.Scene {
     if (this.activeObstruction) {
       this.toolIcon.setVisible(showToolIcon);
       this.toolIcon.setPosition(pointer.x, pointer.y);
+      return;
+    }
+
+    this.toolIcon.setVisible(this.isInsideWindow(pointer) && showToolIcon);
+    this.toolIcon.setPosition(pointer.x, pointer.y);
+  }
+
+  handlePointerMove(pointer) {
+    this.updateToolIcon(pointer);
+
+    if (this.isTransitioning || !pointer.isDown || this.toolSelectorObjects) {
+      return;
+    }
+
+    if (this.activeObstruction) {
       this.handleObstructionPointerMove(pointer);
       return;
     }
 
-    const insideWindow = this.isInsideWindow(pointer);
-    this.toolIcon.setVisible(insideWindow && showToolIcon);
-    this.toolIcon.setPosition(pointer.x, pointer.y);
-
-    if (!insideWindow) {
+    if (!this.isInsideWindow(pointer)) {
       return;
     }
 
@@ -1087,7 +1095,10 @@ export class HouseCleanScene extends Phaser.Scene {
       this.rotateToolTowardSweep(pointer);
     }
 
-    if (this.equippedTool.canCleanWindow === false) {
+    // Holding on a bird-poop spot is a dedicated interaction on its own —
+    // any incidental cursor movement needed just to keep the tool icon
+    // updated shouldn't also wipe the generic dust mask underneath it.
+    if (this.equippedTool.canCleanWindow === false || this.activePoopSpot) {
       return;
     }
 
