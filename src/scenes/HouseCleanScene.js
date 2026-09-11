@@ -108,6 +108,11 @@ const DIRT_SPOT_SNAP_RADIUS = 90;
 const POOP_HOLD_TICK_INTERVAL = 100;
 const SPONGE_VIGOR_SCALE = 1.15;
 const SPONGE_VIGOR_DURATION = 80;
+// Radius equals the dragging tool icon's own diameter, so the ring's
+// diameter ends up exactly double the sponge icon's.
+const POOP_PROGRESS_RADIUS = DRAGGING_TOOL_ICON_SIZE;
+const POOP_PROGRESS_STROKE = 6;
+const POOP_PROGRESS_COLOR = 0x4caf50;
 const BUBBLE_SPAWN_COUNT_PER_TICK = 3;
 const BUBBLE_RISE_DISTANCE = 80;
 const BUBBLE_FADE_DURATION = 700;
@@ -555,12 +560,22 @@ export class HouseCleanScene extends Phaser.Scene {
         .setDisplaySize(DIRT_SPOT_DISPLAY_SIZE, DIRT_SPOT_DISPLAY_SIZE);
       container.add(image);
 
+      const progressGraphics =
+        dirtType.interactionType === "hold"
+          ? this.add.graphics().setPosition(containerX, containerY).setVisible(false)
+          : null;
+
+      if (progressGraphics) {
+        container.add(progressGraphics);
+      }
+
       return {
         type: dirtType.id,
         x,
         y,
         cleared: false,
         image,
+        progressGraphics,
         progress: this.createDirtSpotProgress(dirtType),
       };
     });
@@ -935,6 +950,8 @@ export class HouseCleanScene extends Phaser.Scene {
       callback: () => this.tickPoopHold(),
     });
     this.startSpongeVigorousAnimation();
+    spot.progressGraphics.setVisible(true);
+    this.updatePoopProgressVisuals(spot);
   }
 
   findCleanablePoopSpotNear(x, y) {
@@ -968,6 +985,7 @@ export class HouseCleanScene extends Phaser.Scene {
     this.activePoopSpot.progress.trackTime(now - this.poopHoldLastTick);
     this.poopHoldLastTick = now;
     this.spawnHoldBubbles(this.activePoopSpot);
+    this.updatePoopProgressVisuals(this.activePoopSpot);
 
     if (this.activePoopSpot.progress.isComplete()) {
       this.clearDirtSpot(this.activePoopSpot);
@@ -975,9 +993,20 @@ export class HouseCleanScene extends Phaser.Scene {
     }
   }
 
+  updatePoopProgressVisuals(spot) {
+    const fraction = spot.progress.progressFraction();
+
+    spot.progressGraphics.clear();
+    spot.progressGraphics.lineStyle(POOP_PROGRESS_STROKE, POOP_PROGRESS_COLOR, 1);
+    spot.progressGraphics.beginPath();
+    spot.progressGraphics.arc(0, 0, POOP_PROGRESS_RADIUS, -Math.PI / 2, -Math.PI / 2 - fraction * Math.PI * 2, true);
+    spot.progressGraphics.strokePath();
+  }
+
   stopPoopHold() {
     this.poopHoldTimer?.remove();
     this.poopHoldTimer = null;
+    this.activePoopSpot?.progressGraphics.setVisible(false);
     this.activePoopSpot?.progress.release();
     this.activePoopSpot = null;
     this.stopSpongeVigorousAnimation();
@@ -1446,6 +1475,7 @@ export class HouseCleanScene extends Phaser.Scene {
   clearDirtSpot(spot) {
     spot.cleared = true;
     spot.image.destroy();
+    spot.progressGraphics?.destroy();
     this.eraseSprayDecalsNear(spot.x, spot.y);
     this.updateRevealProgress();
   }
