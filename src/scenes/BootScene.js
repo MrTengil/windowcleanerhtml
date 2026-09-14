@@ -57,6 +57,26 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
+    this.buildMenuBackgroundTexture();
     this.scene.start("MainMenuScene");
+  }
+
+  // Graphics.fillGradientStyle isn't reliably supported by Phaser's Canvas
+  // renderer (this game runs Canvas, not WebGL) — drawing the gradient onto
+  // a real 2D canvas context and using it as a texture works regardless of
+  // renderer. Built once here since MainMenuScene re-runs create() every
+  // time it's (re)entered.
+  buildMenuBackgroundTexture() {
+    const width = this.scale.width;
+    const height = this.scale.height;
+    const canvasTexture = this.textures.createCanvas("menu-background", width, height);
+    const ctx = canvasTexture.getContext();
+    const gradient = ctx.createLinearGradient(0, 0, 0, height);
+
+    gradient.addColorStop(0, "#3d5a99");
+    gradient.addColorStop(1, "#14161c");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+    canvasTexture.refresh();
   }
 }

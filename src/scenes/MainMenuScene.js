@@ -16,6 +16,8 @@ export class MainMenuScene extends Phaser.Scene {
   create() {
     this.gridCenterX = this.scale.width / 2;
 
+    this.buildBackground();
+
     this.add
       .text(this.gridCenterX, 140, "Vertical Shine", {
         fontSize: "48px",
@@ -26,6 +28,10 @@ export class MainMenuScene extends Phaser.Scene {
     HOUSES.forEach((house, index) => this.createHouseCard(house, index));
 
     this.createLiftGarage({ y: 1120 });
+  }
+
+  buildBackground() {
+    this.add.image(this.scale.width / 2, this.scale.height / 2, "menu-background");
   }
 
   createLiftGarage({ y }) {
