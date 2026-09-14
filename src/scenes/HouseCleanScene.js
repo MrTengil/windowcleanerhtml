@@ -432,13 +432,15 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildDebugSkipButton() {
+    // Small and low-key — this is a testing-only affordance, not meant to
+    // stand out to real players the way the pause button does.
     const button = this.add
-      .rectangle(40, 100, 80, 36, 0x555555)
+      .rectangle(40, 100, 50, 22, 0x555555)
       .setStrokeStyle(2, 0xffffff, 0.6)
       .setInteractive({ useHandCursor: true })
       .setDepth(HUD_DEPTH);
 
-    const label = this.add.text(40, 100, "Skip", { fontSize: "14px", color: "#ffffff" }).setOrigin(0.5).setDepth(HUD_DEPTH);
+    const label = this.add.text(40, 100, "Skip", { fontSize: "9px", color: "#ffffff" }).setOrigin(0.5).setDepth(HUD_DEPTH);
 
     button.on("pointerdown", () => this.debugSkipFloor());
 
