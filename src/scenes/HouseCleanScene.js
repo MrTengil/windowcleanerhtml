@@ -325,6 +325,8 @@ export class HouseCleanScene extends Phaser.Scene {
         worldY: screenY - this.scroll.offset * spec.parallax,
       });
     }
+
+    this.worldContainer.sort("depth");
   }
 
   findEquippedTool() {
@@ -594,6 +596,12 @@ export class HouseCleanScene extends Phaser.Scene {
     const segment = { container, dirtMask, worldY, floor, obstruction, sprayDecals: [], dirtSpots };
     this.segments.push(segment);
 
+    // Container doesn't auto-sort its children by depth like the Scene's
+    // own display list does — it renders in insertion order, so each new
+    // segment needs a re-sort to stay correctly behind the lift (see
+    // LIFT_DEPTH) instead of just stacking on top by arrival order.
+    this.worldContainer.sort("depth");
+
     return segment;
   }
 
@@ -809,6 +817,7 @@ export class HouseCleanScene extends Phaser.Scene {
       .setVisible(false)
       .setDepth(1000);
     this.worldContainer.add(this.toolIcon);
+    this.worldContainer.sort("depth");
     this.toolIconRestingScale = this.toolIcon.scaleX;
   }
 
