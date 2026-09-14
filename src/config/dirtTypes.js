@@ -31,7 +31,7 @@ export const DIRT_TYPES = {
     interactionType: "wipe",
     toolIds: ["squeegee"],
     requiredSprayStage: 0,
-    hitsToClean: 48,
+    hitsToClean: 144,
     color: 0xdba844,
     stages: [
       { textureKey: "sticker-stage-1", file: "stickers/sticker_peel_stage_1.svg" },
