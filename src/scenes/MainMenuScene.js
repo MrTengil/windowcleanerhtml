@@ -5,6 +5,14 @@ const CARD_WIDTH = 300;
 const CARD_HEIGHT = 220;
 const CARD_GAP = 20;
 const GRID_TOP = 260;
+const CARD_CORNER_RADIUS = 16;
+// Keeps a thumbnail's square corners tucked inside the card's rounded
+// frame instead of poking past it.
+const CARD_THUMBNAIL_INSET = 14;
+const CARD_LABEL_BACKDROP_HEIGHT = 90;
+const SKYLINE_NATIVE_WIDTH = 1024;
+const CARD_TITLE_BOTTOM_MARGIN = 60;
+const CARD_STATUS_BOTTOM_MARGIN = 24;
 
 const DEFAULT_LIFT_ID = "gondola";
 
@@ -92,22 +100,67 @@ export class MainMenuScene extends Phaser.Scene {
     const row = Math.floor(index / 2);
     const x = this.gridCenterX + (column === 0 ? -1 : 1) * (CARD_GAP / 2 + CARD_WIDTH / 2);
     const y = GRID_TOP + row * (CARD_HEIGHT + CARD_GAP) + CARD_HEIGHT / 2;
+    const left = x - CARD_WIDTH / 2;
+    const top = y - CARD_HEIGHT / 2;
+    const alpha = house.enabled ? 1 : 0.35;
 
-    const card = this.add.rectangle(x, y, CARD_WIDTH, CARD_HEIGHT, house.color, house.enabled ? 1 : 0.35);
-    card.setStrokeStyle(2, 0xffffff, house.enabled ? 0.6 : 0.2);
+    const card = this.add.graphics();
+    card.fillStyle(house.color, alpha);
+    card.fillRoundedRect(left, top, CARD_WIDTH, CARD_HEIGHT, CARD_CORNER_RADIUS);
+    card.lineStyle(2, 0xffffff, house.enabled ? 0.6 : 0.2);
+    card.strokeRoundedRect(left, top, CARD_WIDTH, CARD_HEIGHT, CARD_CORNER_RADIUS);
+
+    if (house.skylineTextureKey) {
+      const thumbnailWidth = CARD_WIDTH - CARD_THUMBNAIL_INSET * 2;
+      const thumbnailHeight = CARD_HEIGHT - CARD_THUMBNAIL_INSET * 2;
+      const thumbnailLeft = x - thumbnailWidth / 2;
+      const thumbnailTop = top + CARD_THUMBNAIL_INSET;
+      const thumbnailScale = thumbnailWidth / SKYLINE_NATIVE_WIDTH;
+
+      // Scaled to the thumbnail's width, anchored by its bottom edge so the
+      // buildings (near the bottom of the source art) show rather than the
+      // empty sky above them — then clipped to the thumbnail box with a
+      // mask, since the scaled art is taller than the box.
+      const image = this.add
+        .image(x, thumbnailTop + thumbnailHeight, house.skylineTextureKey)
+        .setOrigin(0.5, 1)
+        .setScale(thumbnailScale);
+
+      const maskShape = this.make
+        .graphics({ add: false })
+        .fillStyle(0xffffff)
+        .fillRect(thumbnailLeft, thumbnailTop, thumbnailWidth, thumbnailHeight);
+      image.setMask(maskShape.createGeometryMask());
+
+      // A dark band behind the title/status text so it stays legible over
+      // the artwork, matching a level-select tile look.
+      const labelBackdropY = top + CARD_HEIGHT - CARD_LABEL_BACKDROP_HEIGHT / 2;
+      this.add
+        .rectangle(
+          x,
+          labelBackdropY,
+          CARD_WIDTH - CARD_THUMBNAIL_INSET * 2,
+          CARD_LABEL_BACKDROP_HEIGHT,
+          0x000000,
+          0.45,
+        )
+        .setOrigin(0.5);
+    }
+
+    const bottom = top + CARD_HEIGHT;
 
     this.add
-      .text(x, y - 60, house.name, { fontSize: "24px", color: "#ffffff" })
+      .text(x, bottom - CARD_TITLE_BOTTOM_MARGIN, house.name, { fontSize: "24px", color: "#ffffff" })
       .setOrigin(0.5);
 
     const statusLabel = house.enabled ? `${house.floors} floors  •  ${house.difficulty}` : "Coming soon";
     this.add
-      .text(x, y - 20, statusLabel, { fontSize: "18px", color: "#e0e0e0" })
+      .text(x, bottom - CARD_STATUS_BOTTOM_MARGIN, statusLabel, { fontSize: "18px", color: "#e0e0e0" })
       .setOrigin(0.5);
 
     if (house.enabled) {
-      card.setInteractive({ useHandCursor: true });
-      card.on("pointerdown", () => this.scene.start("HouseCleanScene", { houseId: house.id }));
+      const hitArea = this.add.rectangle(x, y, CARD_WIDTH, CARD_HEIGHT, 0x000000, 0).setInteractive({ useHandCursor: true });
+      hitArea.on("pointerdown", () => this.scene.start("HouseCleanScene", { houseId: house.id }));
     }
   }
 
