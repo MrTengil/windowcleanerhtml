@@ -40,6 +40,9 @@ const BOARD_FALL_DURATION = 500;
 const BOARD_FALL_DISTANCE = CANVAS_HEIGHT;
 
 const SCREW_DISPLAY_SIZE = 70;
+// Larger than the screw itself so its handle pokes out from behind it —
+// the visual cue that the screwdriver is inserted and turning it.
+const SCREWDRIVER_ON_SCREW_SIZE = SCREW_DISPLAY_SIZE * 1.3;
 const SCREW_HIT_RADIUS = 170;
 const SCREW_PROGRESS_RADIUS = 50;
 const SCREW_PROGRESS_STROKE = 6;
@@ -685,12 +688,19 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildScrew(container, x, y) {
+    // Added before the screw image so it renders behind it — Phaser layers
+    // a container's children in add order, no explicit depth needed.
+    const screwdriverImage = this.add
+      .image(x, y, "screwdriver")
+      .setDisplaySize(SCREWDRIVER_ON_SCREW_SIZE, SCREWDRIVER_ON_SCREW_SIZE)
+      .setVisible(false);
     const image = this.add.image(x, y, "screw-front").setDisplaySize(SCREW_DISPLAY_SIZE, SCREW_DISPLAY_SIZE);
     const progressGraphics = this.add.graphics().setPosition(x, y);
 
-    container.add([image, progressGraphics]);
+    container.add([screwdriverImage, image, progressGraphics]);
 
     return {
+      screwdriverImage,
       image,
       progressGraphics,
       progress: new ScrewProgress({ targetRotation: UNSCREW_TARGET_ROTATION }),
@@ -1137,6 +1147,8 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
+    let engagingScrew = false;
+
     for (const screw of this.activeObstruction.screws) {
       if (screw.done) {
         continue;
@@ -1148,9 +1160,11 @@ export class HouseCleanScene extends Phaser.Scene {
 
       if (distance > SCREW_HIT_RADIUS) {
         screw.progress.release();
+        screw.screwdriverImage.setVisible(false);
         continue;
       }
 
+      engagingScrew = true;
       const angle = Math.atan2(pointer.y - screwWorldY, pointer.x - screwWorldX);
 
       screw.progress.trackAngle(angle);
@@ -1160,6 +1174,10 @@ export class HouseCleanScene extends Phaser.Scene {
         this.completeScrew(screw);
       }
     }
+
+    // Anchored on the screw itself while engaged instead of the free-
+    // following cursor, so the thumb doesn't obscure which screw is turning.
+    this.toolIcon.setVisible(!engagingScrew);
   }
 
   handleTapeSwipeMove(pointer) {
@@ -1193,6 +1211,7 @@ export class HouseCleanScene extends Phaser.Scene {
     const fraction = screw.progress.progressFraction();
 
     screw.image.rotation = -screw.progress.rotationProgress;
+    screw.screwdriverImage.setVisible(true).setRotation(-screw.progress.rotationProgress);
 
     screw.progressGraphics.clear();
     screw.progressGraphics.lineStyle(SCREW_PROGRESS_STROKE, SCREW_PROGRESS_COLOR, 1);
@@ -1206,6 +1225,7 @@ export class HouseCleanScene extends Phaser.Scene {
 
     screw.done = true;
     screw.progressGraphics.setVisible(false);
+    screw.screwdriverImage.setVisible(false);
     this.animateScrewFall(screw);
 
     const remainingScrew = obstruction.screws.find((candidate) => !candidate.done);
