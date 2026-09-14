@@ -17,6 +17,7 @@ import { CLOUDS, CLOUD_FIRST_FLOOR } from "../config/clouds.js";
 import { SPRAY_PATTERNS } from "../config/sprayPatterns.js";
 import { computeSprayStage } from "../utils/computeSprayStage.js";
 import { computeStickerStage } from "../utils/computeStickerStage.js";
+import { planInfiniteFloorContent } from "../utils/planInfiniteFloorContent.js";
 import { formatFloorLabel } from "../ui/HUD.js";
 
 const CANVAS_HEIGHT = 1560;
@@ -64,6 +65,10 @@ const TAPE_MIN_PIECE_WIDTH = 20;
 // another further away — with a single tape (every existing house) this
 // never applies, so "anywhere above/below" behaves exactly as before.
 const TAPE_ACTIVATION_MARGIN = 100;
+// Vertical gap between two simultaneous obstructions' centers (the infinite
+// house only) — wide enough that their screw hit-radii/tape bands don't
+// meaningfully overlap.
+const OBSTRUCTION_BAND_SPACING = 260;
 
 const TAPE_FLING_UP_DISTANCE = 50;
 const TAPE_FLING_APART_DISTANCE = 40;
@@ -588,8 +593,9 @@ export class HouseCleanScene extends Phaser.Scene {
       container.add(this.add.image(0, ROOF_Y - WINDOW_Y, this.house.roofTextureKey));
     }
 
-    const dirtSpots = this.buildDirtSpots(container);
-    const obstructions = this.buildObstructions(container);
+    const floorContent = this.planFloorContent();
+    const dirtSpots = this.buildDirtSpots(container, floorContent.dirtTypeIds);
+    const obstructions = this.buildObstructions(container, floorContent.obstructionTypes);
 
     const segment = { container, dirtMask, worldY, floor, obstructions, sprayDecals: [], dirtSpots };
     this.segments.push(segment);
@@ -617,8 +623,21 @@ export class HouseCleanScene extends Phaser.Scene {
     this.drawProgressBar(0);
   }
 
-  buildDirtSpots(container) {
-    const spotTypes = this.house.dirtTypeIds
+  // Curated houses always get one of each declared dirt type plus a single
+  // random obstruction; the infinite house gets a freshly randomized mix of
+  // both every floor (see planInfiniteFloorContent).
+  planFloorContent() {
+    if (this.house.infinite) {
+      return planInfiniteFloorContent({ random: () => Math.random() });
+    }
+
+    const obstructionType = Phaser.Math.Between(0, 1) === 0 ? "board" : "police-tape";
+
+    return { dirtTypeIds: this.house.dirtTypeIds, obstructionTypes: [obstructionType] };
+  }
+
+  buildDirtSpots(container, spotTypeIds) {
+    const spotTypes = spotTypeIds
       .map((id) => DIRT_TYPES[id])
       .filter((dirtType) => dirtType.textureKey || dirtType.stages);
 
@@ -671,17 +690,17 @@ export class HouseCleanScene extends Phaser.Scene {
     return new DirtSpot({ hitsToClean: dirtType.hitsToClean });
   }
 
-  // One random obstruction, dead-centered (bandOffsetY 0) — the shape
-  // every existing house has always had. Overridden per-house (see the
-  // infinite house's procedural content) for floors that need more than
-  // one simultaneous obstruction.
-  buildObstructions(container) {
-    const obstruction =
-      Phaser.Math.Between(0, 1) === 0
-        ? this.buildBoardObstruction(container, 0)
-        : this.buildPoliceTapeObstruction(container, 0);
+  // A single obstruction sits dead-centered (bandOffsetY 0); multiple ones
+  // (the infinite house only) spread out evenly so their screws/tape bands
+  // don't overlap.
+  buildObstructions(container, obstructionTypes) {
+    return obstructionTypes.map((type, index) => {
+      const bandOffsetY = (index - (obstructionTypes.length - 1) / 2) * OBSTRUCTION_BAND_SPACING;
 
-    return [obstruction];
+      return type === "board"
+        ? this.buildBoardObstruction(container, bandOffsetY)
+        : this.buildPoliceTapeObstruction(container, bandOffsetY);
+    });
   }
 
   buildBoardObstruction(container, bandOffsetY) {
