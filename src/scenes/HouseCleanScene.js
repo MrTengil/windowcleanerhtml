@@ -218,7 +218,19 @@ export class HouseCleanScene extends Phaser.Scene {
   create() {
     this.equippedTool = this.findEquippedTool();
     this.computeLayout();
+
+    // The level zoom must not also zoom the HUD (buttons/labels near the
+    // canvas edges would be pushed out of view) — everything gameplay-
+    // related is parented under worldContainer, which only the zoomed main
+    // camera renders; HUD goes under hudContainer, rendered only by a plain
+    // unzoomed uiCamera layered on top. Ignoring a container hides its
+    // children too, and covers anything added to it later.
+    this.worldContainer = this.add.container(0, 0);
+    this.hudContainer = this.add.container(0, 0);
     this.cameras.main.setZoom(LEVEL_ZOOM);
+    this.cameras.main.ignore(this.hudContainer);
+    this.uiCamera = this.cameras.add(0, 0, this.canvasWidth, CANVAS_HEIGHT);
+    this.uiCamera.ignore(this.worldContainer);
 
     this.buildSkyBackground();
     this.buildBuildingWall();
@@ -304,6 +316,7 @@ export class HouseCleanScene extends Phaser.Scene {
         .setScale(spec.scale)
         .setAlpha(spec.alpha)
         .setDepth(CLOUD_DEPTH);
+      this.worldContainer.add(image);
 
       this.clouds.push({
         image,
@@ -321,7 +334,9 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   buildSkyBackground() {
-    this.add.rectangle(this.buildingX, CANVAS_HEIGHT / 2, this.canvasWidth, CANVAS_HEIGHT, SKY_COLOR).setDepth(SKY_DEPTH);
+    const sky = this.add
+      .rectangle(this.buildingX, CANVAS_HEIGHT / 2, this.canvasWidth, CANVAS_HEIGHT, SKY_COLOR)
+      .setDepth(SKY_DEPTH);
 
     this.skyline = this.add
       .image(this.buildingX, 0, this.house.skylineTextureKey)
@@ -330,6 +345,8 @@ export class HouseCleanScene extends Phaser.Scene {
     this.skylineBaseY = -this.skylineParallaxTravel();
     this.skyline.setDisplaySize(this.canvasWidth, CANVAS_HEIGHT + this.skylineParallaxTravel());
     this.skyline.y = this.skylineBaseY;
+
+    this.worldContainer.add([sky, this.skyline]);
   }
 
   skylineParallaxTravel() {
@@ -338,6 +355,7 @@ export class HouseCleanScene extends Phaser.Scene {
 
   buildBuildingWall() {
     this.wall = this.add.tileSprite(this.buildingX, CANVAS_HEIGHT / 2, WALL_WIDTH, CANVAS_HEIGHT, this.house.wallTextureKey);
+    this.worldContainer.add(this.wall);
   }
 
   buildHud() {
@@ -352,8 +370,13 @@ export class HouseCleanScene extends Phaser.Scene {
     this.progressBarGraphics = this.add.graphics().setDepth(HUD_DEPTH);
     this.drawProgressBar(0);
 
-    this.add.rectangle(40, 40, 40, 40, 0x333333).setStrokeStyle(2, 0xffffff, 0.6).setDepth(HUD_DEPTH);
-    this.add.text(40, 40, "II", { fontSize: "18px", color: "#ffffff" }).setOrigin(0.5).setDepth(HUD_DEPTH);
+    const pauseButton = this.add.rectangle(40, 40, 40, 40, 0x333333).setStrokeStyle(2, 0xffffff, 0.6).setDepth(HUD_DEPTH);
+    const pauseLabel = this.add
+      .text(40, 40, "II", { fontSize: "18px", color: "#ffffff" })
+      .setOrigin(0.5)
+      .setDepth(HUD_DEPTH);
+
+    this.hudContainer.add([this.floorText, this.progressBarGraphics, pauseButton, pauseLabel]);
   }
 
   // Every tool is shown at once in a permanent row (outside the window's
@@ -390,6 +413,8 @@ export class HouseCleanScene extends Phaser.Scene {
       .setOrigin(0.5, 0)
       .setDepth(HUD_DEPTH);
 
+    this.hudContainer.add([background, glyph, label]);
+
     return [background, glyph, label];
   }
 
@@ -416,9 +441,11 @@ export class HouseCleanScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .setDepth(HUD_DEPTH);
 
-    this.add.text(40, 100, "Skip", { fontSize: "14px", color: "#ffffff" }).setOrigin(0.5).setDepth(HUD_DEPTH);
+    const label = this.add.text(40, 100, "Skip", { fontSize: "14px", color: "#ffffff" }).setOrigin(0.5).setDepth(HUD_DEPTH);
 
     button.on("pointerdown", () => this.debugSkipFloor());
+
+    this.hudContainer.add([button, label]);
   }
 
   debugSkipFloor() {
@@ -436,6 +463,7 @@ export class HouseCleanScene extends Phaser.Scene {
       LIFTS.find((candidate) => candidate.id === this.house.liftId);
 
     this.liftContainer = this.add.container(this.buildingX, LIFT_Y).setDepth(LIFT_DEPTH);
+    this.worldContainer.add(this.liftContainer);
     this.liftBaseX = this.buildingX;
     this.liftBaseY = LIFT_Y;
 
@@ -532,6 +560,7 @@ export class HouseCleanScene extends Phaser.Scene {
       spacing: SEGMENT_SPACING,
     });
     const container = this.add.container(this.buildingX, worldY + this.scroll.offset);
+    this.worldContainer.add(container);
 
     const pane = this.add
       .rectangle(WINDOW_OFFSET_X, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0x9fd3e8)
@@ -770,6 +799,7 @@ export class HouseCleanScene extends Phaser.Scene {
 
   buildEraserBrush() {
     this.eraserBrush = this.add.circle(0, 0, BRUSH_RADIUS, 0xffffff).setVisible(false);
+    this.worldContainer.add(this.eraserBrush);
   }
 
   refreshDraggingToolIcon() {
@@ -778,6 +808,7 @@ export class HouseCleanScene extends Phaser.Scene {
     this.toolIcon = this.createToolIcon(this.equippedTool, 0, 0, DRAGGING_TOOL_ICON_SIZE)
       .setVisible(false)
       .setDepth(1000);
+    this.worldContainer.add(this.toolIcon);
     this.toolIconRestingScale = this.toolIcon.scaleX;
   }
 
@@ -1632,16 +1663,24 @@ export class HouseCleanScene extends Phaser.Scene {
   showLevelComplete() {
     this.isTransitioning = true;
 
-    this.add.rectangle(this.buildingX, CANVAS_HEIGHT / 2, this.canvasWidth, CANVAS_HEIGHT, 0x000000, 0.7).setDepth(100);
-    this.add
+    const backdrop = this.add
+      .rectangle(this.buildingX, CANVAS_HEIGHT / 2, this.canvasWidth, CANVAS_HEIGHT, 0x000000, 0.7)
+      .setDepth(100);
+    const title = this.add
       .text(this.buildingX, 580, "Level Complete", { fontSize: "40px", color: "#ffffff" })
-      .setOrigin(0.5).setDepth(101);
+      .setOrigin(0.5)
+      .setDepth(101);
 
     const menuButton = this.add
       .rectangle(this.buildingX, 660, 200, 60, 0x4caf50)
       .setInteractive({ useHandCursor: true }).setDepth(101);
-    this.add.text(this.buildingX, 660, "Menu", { fontSize: "24px", color: "#ffffff" }).setOrigin(0.5).setDepth(101);
+    const menuLabel = this.add
+      .text(this.buildingX, 660, "Menu", { fontSize: "24px", color: "#ffffff" })
+      .setOrigin(0.5)
+      .setDepth(101);
 
     menuButton.on("pointerdown", () => this.scene.start("MainMenuScene"));
+
+    this.hudContainer.add([backdrop, title, menuButton, menuLabel]);
   }
 }
