@@ -14,9 +14,15 @@ const SKYLINE_NATIVE_WIDTH = 1024;
 const CARD_TITLE_BOTTOM_MARGIN = 60;
 const CARD_STATUS_BOTTOM_MARGIN = 24;
 
+// The infinite house renders as its own full-width tile below the 2x2
+// grid instead of awkwardly filling the grid's leftover slot — visually
+// marking it as a different mode, not just another building.
+const INFINITE_CARD_WIDTH = CARD_WIDTH * 2 + CARD_GAP;
+const INFINITE_CARD_Y = 850;
+
 const DEFAULT_LIFT_ID = "gondola";
 
-const SETTINGS_BUTTON_Y = 790;
+const SETTINGS_BUTTON_Y = 1010;
 const SETTINGS_BUTTON_WIDTH = 200;
 const SETTINGS_BUTTON_HEIGHT = 56;
 const SETTINGS_BUTTON_CORNER_RADIUS = 12;
@@ -45,7 +51,13 @@ export class MainMenuScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    HOUSES.forEach((house, index) => this.createHouseCard(house, index));
+    HOUSES.filter((house) => !house.infinite).forEach((house, index) => this.createHouseCard(house, index));
+
+    const infiniteHouse = HOUSES.find((house) => house.infinite);
+
+    if (infiniteHouse) {
+      this.createInfiniteHouseCard(infiniteHouse);
+    }
 
     if (!this.registry.has("selectedLiftId")) {
       this.registry.set("selectedLiftId", DEFAULT_LIFT_ID);
@@ -187,19 +199,33 @@ export class MainMenuScene extends Phaser.Scene {
     const row = Math.floor(index / 2);
     const x = this.gridCenterX + (column === 0 ? -1 : 1) * (CARD_GAP / 2 + CARD_WIDTH / 2);
     const y = GRID_TOP + row * (CARD_HEIGHT + CARD_GAP) + CARD_HEIGHT / 2;
-    const left = x - CARD_WIDTH / 2;
-    const top = y - CARD_HEIGHT / 2;
+    const statusLabel = house.enabled ? `${house.floors} floors  •  ${house.difficulty}` : "Coming soon";
+
+    this.drawHouseTile({ house, x, y, width: CARD_WIDTH, height: CARD_HEIGHT, statusLabel });
+  }
+
+  createInfiniteHouseCard(house) {
+    const x = this.gridCenterX;
+    const y = INFINITE_CARD_Y;
+    const statusLabel = `∞ floors  •  ${house.difficulty}`;
+
+    this.drawHouseTile({ house, x, y, width: INFINITE_CARD_WIDTH, height: CARD_HEIGHT, statusLabel });
+  }
+
+  drawHouseTile({ house, x, y, width, height, statusLabel }) {
+    const left = x - width / 2;
+    const top = y - height / 2;
     const alpha = house.enabled ? 1 : 0.35;
 
     const card = this.add.graphics();
     card.fillStyle(house.color, alpha);
-    card.fillRoundedRect(left, top, CARD_WIDTH, CARD_HEIGHT, CARD_CORNER_RADIUS);
+    card.fillRoundedRect(left, top, width, height, CARD_CORNER_RADIUS);
     card.lineStyle(2, 0xffffff, house.enabled ? 0.6 : 0.2);
-    card.strokeRoundedRect(left, top, CARD_WIDTH, CARD_HEIGHT, CARD_CORNER_RADIUS);
+    card.strokeRoundedRect(left, top, width, height, CARD_CORNER_RADIUS);
 
     if (house.skylineTextureKey) {
-      const thumbnailWidth = CARD_WIDTH - CARD_THUMBNAIL_INSET * 2;
-      const thumbnailHeight = CARD_HEIGHT - CARD_THUMBNAIL_INSET * 2;
+      const thumbnailWidth = width - CARD_THUMBNAIL_INSET * 2;
+      const thumbnailHeight = height - CARD_THUMBNAIL_INSET * 2;
       const thumbnailLeft = x - thumbnailWidth / 2;
       const thumbnailTop = top + CARD_THUMBNAIL_INSET;
       const thumbnailScale = thumbnailWidth / SKYLINE_NATIVE_WIDTH;
@@ -221,32 +247,24 @@ export class MainMenuScene extends Phaser.Scene {
 
       // A dark band behind the title/status text so it stays legible over
       // the artwork, matching a level-select tile look.
-      const labelBackdropY = top + CARD_HEIGHT - CARD_LABEL_BACKDROP_HEIGHT / 2;
+      const labelBackdropY = top + height - CARD_LABEL_BACKDROP_HEIGHT / 2;
       this.add
-        .rectangle(
-          x,
-          labelBackdropY,
-          CARD_WIDTH - CARD_THUMBNAIL_INSET * 2,
-          CARD_LABEL_BACKDROP_HEIGHT,
-          0x000000,
-          0.45,
-        )
+        .rectangle(x, labelBackdropY, width - CARD_THUMBNAIL_INSET * 2, CARD_LABEL_BACKDROP_HEIGHT, 0x000000, 0.45)
         .setOrigin(0.5);
     }
 
-    const bottom = top + CARD_HEIGHT;
+    const bottom = top + height;
 
     this.add
       .text(x, bottom - CARD_TITLE_BOTTOM_MARGIN, house.name, { fontSize: "24px", color: "#ffffff" })
       .setOrigin(0.5);
 
-    const statusLabel = house.enabled ? `${house.floors} floors  •  ${house.difficulty}` : "Coming soon";
     this.add
       .text(x, bottom - CARD_STATUS_BOTTOM_MARGIN, statusLabel, { fontSize: "18px", color: "#e0e0e0" })
       .setOrigin(0.5);
 
     if (house.enabled) {
-      const hitArea = this.add.rectangle(x, y, CARD_WIDTH, CARD_HEIGHT, 0x000000, 0).setInteractive({ useHandCursor: true });
+      const hitArea = this.add.rectangle(x, y, width, height, 0x000000, 0).setInteractive({ useHandCursor: true });
       hitArea.on("pointerdown", () => this.scene.start("HouseCleanScene", { houseId: house.id }));
     }
   }
