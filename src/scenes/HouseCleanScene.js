@@ -115,6 +115,15 @@ const SPRAY_MAX_STAGE = 8;
 const SPRAY_SPOT_RADIUS = 85;
 const SPRAY_DECAL_DISPLAY_SIZE = 170;
 
+const SPRAY_BOTTLE_EFFECT_WIDTH = 90;
+const SPRAY_BOTTLE_NATIVE_ASPECT = 330 / 220;
+const SPRAY_BOTTLE_EFFECT_RADIUS = 160;
+const SPRAY_BOTTLE_EFFECT_DURATION = 180;
+// The bottle art's own nozzle points up-and-right at roughly this angle when
+// unrotated — used to aim the effect in at the spray target instead of away
+// from it.
+const SPRAY_BOTTLE_NOZZLE_ANGLE_DEGREES = -56;
+
 const DIRT_SPOT_MARGIN = 80;
 const DIRT_SPOT_MIN_SPACING = 160;
 const DIRT_SPOT_DISPLAY_SIZE = 140;
@@ -905,6 +914,37 @@ export class HouseCleanScene extends Phaser.Scene {
 
     this.activeContainer.add(image);
     decal.layerImages.push(image);
+
+    this.spawnSprayBottleEffect(decal);
+  }
+
+  // The only visual cue that spraying is happening — the tool icon itself is
+  // hidden for the spray bottle (see updateToolIcon) and the decal builds up
+  // right under the thumb. A bottle image flashes in from a random angle
+  // around the target, aimed inward, each time a new layer lands.
+  spawnSprayBottleEffect(decal) {
+    const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+    const { x: containerX, y: containerY } = this.toContainerLocal(
+      decal.x + Math.cos(angle) * SPRAY_BOTTLE_EFFECT_RADIUS,
+      decal.y + Math.sin(angle) * SPRAY_BOTTLE_EFFECT_RADIUS,
+    );
+    const nozzleAngle = Phaser.Math.DegToRad(SPRAY_BOTTLE_NOZZLE_ANGLE_DEGREES);
+
+    const bottle = this.add
+      .image(containerX, containerY, "spray-bottle")
+      .setDisplaySize(SPRAY_BOTTLE_EFFECT_WIDTH, SPRAY_BOTTLE_EFFECT_WIDTH * SPRAY_BOTTLE_NATIVE_ASPECT)
+      .setRotation(angle + Math.PI - nozzleAngle)
+      .setAlpha(0);
+
+    this.activeContainer.add(bottle);
+
+    this.tweens.add({
+      targets: bottle,
+      alpha: { from: 0, to: 1 },
+      duration: SPRAY_BOTTLE_EFFECT_DURATION / 2,
+      yoyo: true,
+      onComplete: () => bottle.destroy(),
+    });
   }
 
   startPoopHold(pointer) {
