@@ -23,7 +23,7 @@ const CANVAS_HEIGHT = 1560;
 
 // How far in the camera is zoomed on the level — tweak this value to test
 // framing, no other change needed.
-const LEVEL_ZOOM = 1.15;
+const LEVEL_ZOOM = 1.20;
 
 const WINDOW_Y = 800;
 const WINDOW_WIDTH = 420;
@@ -164,7 +164,7 @@ const LIFT_PLATFORM_SPECS = {
     ropeWidth: 10,
     ropeAnchorsX: [160, 480],
     ropeBehindPlatform: true,
-    bucketAnchor: { x: 320, y: 20 },
+    bucketAnchor: { x: 140, y: 20 },
   },
   "hanging-board": {
     nativeWidth: 520,
