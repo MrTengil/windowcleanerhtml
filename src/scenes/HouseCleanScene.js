@@ -66,7 +66,18 @@ const TAPE_FALL_APART_DISTANCE = 80;
 const TAPE_FALL_ROTATION_MIN = 1.5 * Math.PI;
 const TAPE_FALL_ROTATION_MAX = 2.5 * Math.PI;
 
-const HUD_RIGHT_MARGIN = 40;
+const TOOL_ROW_ICON_SIZE = 60;
+const TOOL_ROW_GLYPH_SIZE = 44;
+const TOOL_ROW_GAP = 24;
+const TOOL_ROW_Y = CANVAS_HEIGHT - 130;
+const TOOL_ROW_LABEL_OFFSET_Y = TOOL_ROW_ICON_SIZE / 2 + 10;
+const TOOL_ROW_BG_COLOR = 0x1a1a1a;
+const TOOL_ROW_BG_ALPHA = 0.85;
+const TOOL_ROW_OUTLINE_COLOR = 0xffffff;
+const TOOL_ROW_OUTLINE_ALPHA = 0.5;
+const TOOL_ROW_OUTLINE_WIDTH = 3;
+const TOOL_ROW_SELECTED_OUTLINE_COLOR = 0x4caf50;
+const TOOL_ROW_SELECTED_OUTLINE_WIDTH = 5;
 
 const SKY_COLOR = 0x87ceeb;
 const SKYLINE_PARALLAX = 0.25;
@@ -158,13 +169,6 @@ const BUCKET_DISPLAY_WIDTH = BUCKET_BASE_WIDTH * BUCKET_SCALE;
 const BUCKET_NATIVE_ASPECT = 220 / 200;
 const BUCKET_ORIGIN_Y = 0.1;
 
-const TOOL_SELECTOR_BACKDROP_DEPTH = 1500;
-const TOOL_SELECTOR_PANEL_DEPTH = 1600;
-const TOOL_SELECTOR_ICON_SIZE = 50;
-const TOOL_SELECTOR_GAP = 30;
-const TOOL_SELECTOR_PANEL_PADDING = 40;
-const TOOL_SELECTOR_PANEL_HEIGHT = 140;
-
 export class HouseCleanScene extends Phaser.Scene {
   constructor() {
     super("HouseCleanScene");
@@ -198,7 +202,7 @@ export class HouseCleanScene extends Phaser.Scene {
     this.buildSkyBackground();
     this.buildBuildingWall();
     this.buildHud();
-    this.refreshToolbeltDisplay();
+    this.refreshToolRow();
     this.buildLift();
 
     const firstFloor = this.spawnFloorSegment(1);
@@ -331,33 +335,49 @@ export class HouseCleanScene extends Phaser.Scene {
     this.add.text(40, 40, "II", { fontSize: "18px", color: "#ffffff" }).setOrigin(0.5).setDepth(HUD_DEPTH);
   }
 
-  refreshToolbeltDisplay() {
-    const toolbeltX = this.canvasWidth - HUD_RIGHT_MARGIN;
+  // Every tool is shown at once in a permanent row (outside the window's
+  // bounds) instead of behind a bucket tap — see createToolRowIcon for the
+  // square-backing + selection-outline treatment.
+  refreshToolRow() {
+    this.toolRowObjects?.forEach((object) => object.destroy());
 
-    this.toolbeltIcon?.destroy();
-    this.toolbeltLabel?.destroy();
+    const totalWidth = TOOLS.length * TOOL_ROW_ICON_SIZE + (TOOLS.length - 1) * TOOL_ROW_GAP;
+    const startX = this.buildingX - totalWidth / 2 + TOOL_ROW_ICON_SIZE / 2;
 
-    this.toolbeltIcon = this.createToolIcon(this.equippedTool, toolbeltX, 40, 50, { withBorder: true }).setDepth(
-      HUD_DEPTH,
+    this.toolRowObjects = TOOLS.flatMap((tool, index) =>
+      this.createToolRowIcon(tool, startX + index * (TOOL_ROW_ICON_SIZE + TOOL_ROW_GAP), TOOL_ROW_Y),
     );
-    this.toolbeltLabel = this.add
-      .text(toolbeltX, 70, this.equippedTool.name, { fontSize: "12px", color: "#ffffff", align: "center" })
-      .setOrigin(0.5, 0)
-      .setDepth(HUD_DEPTH);
   }
 
-  createToolIcon(tool, x, y, size, { withBorder }) {
+  createToolRowIcon(tool, x, y) {
+    const selected = tool.id === this.equippedTool.id;
+    const outlineColor = selected ? TOOL_ROW_SELECTED_OUTLINE_COLOR : TOOL_ROW_OUTLINE_COLOR;
+    const outlineWidth = selected ? TOOL_ROW_SELECTED_OUTLINE_WIDTH : TOOL_ROW_OUTLINE_WIDTH;
+
+    const background = this.add
+      .rectangle(x, y, TOOL_ROW_ICON_SIZE, TOOL_ROW_ICON_SIZE, TOOL_ROW_BG_COLOR, TOOL_ROW_BG_ALPHA)
+      .setStrokeStyle(outlineWidth, outlineColor, selected ? 1 : TOOL_ROW_OUTLINE_ALPHA)
+      .setInteractive({ useHandCursor: true })
+      .setDepth(HUD_DEPTH);
+
+    background.on("pointerdown", () => this.selectTool(tool));
+
+    const glyph = this.createToolIcon(tool, x, y, TOOL_ROW_GLYPH_SIZE).setDepth(HUD_DEPTH + 1);
+
+    const label = this.add
+      .text(x, y + TOOL_ROW_LABEL_OFFSET_Y, tool.name, { fontSize: "11px", color: "#ffffff", align: "center" })
+      .setOrigin(0.5, 0)
+      .setDepth(HUD_DEPTH);
+
+    return [background, glyph, label];
+  }
+
+  createToolIcon(tool, x, y, size) {
     if (tool.iconTextureKey) {
       return this.add.image(x, y, tool.iconTextureKey).setDisplaySize(size, size);
     }
 
-    const rectangle = this.add.rectangle(x, y, size, size, tool.color);
-
-    if (withBorder) {
-      rectangle.setStrokeStyle(3, 0xffffff, 0.9);
-    }
-
-    return rectangle;
+    return this.add.rectangle(x, y, size, size, tool.color);
   }
 
   drawProgressBar(fraction) {
@@ -440,13 +460,12 @@ export class HouseCleanScene extends Phaser.Scene {
     const anchorY = platformTopY + spec.bucketAnchor.y * scaleFactor;
     const bucketDisplayHeight = BUCKET_DISPLAY_WIDTH * BUCKET_NATIVE_ASPECT;
 
+    // Decorative only — tools live in the permanent tool row now, not behind
+    // a tap on the bucket.
     this.bucketImage = this.add
       .image(anchorX, anchorY, "lift-bucket")
       .setDisplaySize(BUCKET_DISPLAY_WIDTH, bucketDisplayHeight)
-      .setOrigin(0.5, BUCKET_ORIGIN_Y)
-      .setInteractive({ useHandCursor: true });
-
-    this.bucketImage.on("pointerdown", () => this.openToolSelector());
+      .setOrigin(0.5, BUCKET_ORIGIN_Y);
 
     // Added last so it renders on top regardless of each lift's own
     // ropeBehindPlatform ordering.
@@ -723,77 +742,16 @@ export class HouseCleanScene extends Phaser.Scene {
   refreshDraggingToolIcon() {
     this.toolIcon?.destroy();
 
-    this.toolIcon = this.createToolIcon(this.equippedTool, 0, 0, DRAGGING_TOOL_ICON_SIZE, { withBorder: false })
+    this.toolIcon = this.createToolIcon(this.equippedTool, 0, 0, DRAGGING_TOOL_ICON_SIZE)
       .setVisible(false)
       .setDepth(1000);
     this.toolIconRestingScale = this.toolIcon.scaleX;
   }
 
-  openToolSelector() {
-    if (this.toolSelectorObjects) {
-      return;
-    }
-
-    const centerX = this.buildingX;
-    const centerY = CANVAS_HEIGHT / 2;
-    const totalWidth = TOOLS.length * TOOL_SELECTOR_ICON_SIZE + (TOOLS.length - 1) * TOOL_SELECTOR_GAP;
-    const startX = centerX - totalWidth / 2 + TOOL_SELECTOR_ICON_SIZE / 2;
-
-    const backdrop = this.add
-      .rectangle(centerX, CANVAS_HEIGHT / 2, this.canvasWidth, CANVAS_HEIGHT, 0x000000, 0.6)
-      .setInteractive()
-      .setDepth(TOOL_SELECTOR_BACKDROP_DEPTH);
-
-    backdrop.on("pointerdown", () => this.closeToolSelector());
-
-    const panel = this.add
-      .rectangle(
-        centerX,
-        centerY,
-        totalWidth + TOOL_SELECTOR_PANEL_PADDING * 2,
-        TOOL_SELECTOR_PANEL_HEIGHT,
-        0x222222,
-        0.95,
-      )
-      .setStrokeStyle(2, 0xffffff, 0.6)
-      .setInteractive()
-      .setDepth(TOOL_SELECTOR_PANEL_DEPTH);
-
-    panel.on("pointerdown", () => {});
-
-    this.toolSelectorObjects = [backdrop, panel];
-
-    TOOLS.forEach((tool, index) => {
-      const x = startX + index * (TOOL_SELECTOR_ICON_SIZE + TOOL_SELECTOR_GAP);
-      const y = centerY - 20;
-
-      const icon = this.createToolIcon(tool, x, y, TOOL_SELECTOR_ICON_SIZE, {
-        withBorder: tool.id === this.equippedTool.id,
-      })
-        .setInteractive({ useHandCursor: true })
-        .setDepth(TOOL_SELECTOR_PANEL_DEPTH + 1);
-
-      icon.on("pointerdown", () => this.selectTool(tool));
-
-      const label = this.add
-        .text(x, y + TOOL_SELECTOR_ICON_SIZE / 2 + 10, tool.name, { fontSize: "12px", color: "#ffffff", align: "center" })
-        .setOrigin(0.5, 0)
-        .setDepth(TOOL_SELECTOR_PANEL_DEPTH + 1);
-
-      this.toolSelectorObjects.push(icon, label);
-    });
-  }
-
-  closeToolSelector() {
-    this.toolSelectorObjects?.forEach((object) => object.destroy());
-    this.toolSelectorObjects = null;
-  }
-
   selectTool(tool) {
     this.equippedTool = tool;
-    this.refreshToolbeltDisplay();
+    this.refreshToolRow();
     this.refreshDraggingToolIcon();
-    this.closeToolSelector();
   }
 
   setupSwipeInput() {
@@ -827,9 +785,7 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   canInteractWithWindow(pointer) {
-    return (
-      !this.isTransitioning && !this.toolSelectorObjects && !this.activeObstruction && this.isInsideWindow(pointer)
-    );
+    return !this.isTransitioning && !this.activeObstruction && this.isInsideWindow(pointer);
   }
 
   startSprayHold(pointer) {
@@ -1069,7 +1025,7 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   updateToolIcon(pointer) {
-    if (this.isTransitioning || !pointer.isDown || this.toolSelectorObjects) {
+    if (this.isTransitioning || !pointer.isDown) {
       this.toolIcon.setVisible(false);
       return;
     }
@@ -1089,7 +1045,7 @@ export class HouseCleanScene extends Phaser.Scene {
   handlePointerMove(pointer) {
     this.updateToolIcon(pointer);
 
-    if (this.isTransitioning || !pointer.isDown || this.toolSelectorObjects) {
+    if (this.isTransitioning || !pointer.isDown) {
       return;
     }
 
