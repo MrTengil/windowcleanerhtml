@@ -16,6 +16,18 @@ const CARD_STATUS_BOTTOM_MARGIN = 24;
 
 const DEFAULT_LIFT_ID = "gondola";
 
+const SETTINGS_BUTTON_Y = 790;
+const SETTINGS_BUTTON_WIDTH = 200;
+const SETTINGS_BUTTON_HEIGHT = 56;
+const SETTINGS_BUTTON_CORNER_RADIUS = 12;
+
+const SETTINGS_PANEL_WIDTH = 420;
+const SETTINGS_PANEL_HEIGHT = 300;
+const SETTINGS_PANEL_CORNER_RADIUS = 20;
+const SETTINGS_BACKDROP_DEPTH = 500;
+const SETTINGS_PANEL_DEPTH = 501;
+const SETTINGS_CONTENT_DEPTH = 502;
+
 export class MainMenuScene extends Phaser.Scene {
   constructor() {
     super("MainMenuScene");
@@ -35,27 +47,97 @@ export class MainMenuScene extends Phaser.Scene {
 
     HOUSES.forEach((house, index) => this.createHouseCard(house, index));
 
-    this.createLiftGarage({ y: 1120 });
+    if (!this.registry.has("selectedLiftId")) {
+      this.registry.set("selectedLiftId", DEFAULT_LIFT_ID);
+    }
+
+    this.buildSettingsButton();
   }
 
   buildBackground() {
     this.add.image(this.scale.width / 2, this.scale.height / 2, "menu-background");
   }
 
-  createLiftGarage({ y }) {
-    if (!this.registry.has("selectedLiftId")) {
-      this.registry.set("selectedLiftId", DEFAULT_LIFT_ID);
+  buildSettingsButton() {
+    const x = this.gridCenterX;
+    const y = SETTINGS_BUTTON_Y;
+    const left = x - SETTINGS_BUTTON_WIDTH / 2;
+    const top = y - SETTINGS_BUTTON_HEIGHT / 2;
+
+    const button = this.add.graphics();
+    button.fillStyle(0x2a2a2a, 0.85);
+    button.fillRoundedRect(left, top, SETTINGS_BUTTON_WIDTH, SETTINGS_BUTTON_HEIGHT, SETTINGS_BUTTON_CORNER_RADIUS);
+    button.lineStyle(2, 0xffffff, 0.5);
+    button.strokeRoundedRect(left, top, SETTINGS_BUTTON_WIDTH, SETTINGS_BUTTON_HEIGHT, SETTINGS_BUTTON_CORNER_RADIUS);
+
+    this.add.text(x, y, "Settings", { fontSize: "20px", color: "#ffffff" }).setOrigin(0.5);
+
+    const hitArea = this.add
+      .rectangle(x, y, SETTINGS_BUTTON_WIDTH, SETTINGS_BUTTON_HEIGHT, 0x000000, 0)
+      .setInteractive({ useHandCursor: true });
+    hitArea.on("pointerdown", () => this.openSettings());
+  }
+
+  openSettings() {
+    if (this.settingsObjects) {
+      return;
     }
 
-    this.add
-      .text(this.gridCenterX, y, "Lift Garage", { fontSize: "24px", color: "#ffffff" })
-      .setOrigin(0.5);
+    const centerX = this.scale.width / 2;
+    const centerY = this.scale.height / 2;
+    const panelLeft = centerX - SETTINGS_PANEL_WIDTH / 2;
+    const panelTop = centerY - SETTINGS_PANEL_HEIGHT / 2;
+
+    const backdrop = this.add
+      .rectangle(centerX, centerY, this.scale.width, this.scale.height, 0x000000, 0.7)
+      .setInteractive()
+      .setDepth(SETTINGS_BACKDROP_DEPTH);
+    backdrop.on("pointerdown", () => this.closeSettings());
+
+    const panel = this.add.graphics().setDepth(SETTINGS_PANEL_DEPTH);
+    panel.fillStyle(0x1c1c24, 0.97);
+    panel.fillRoundedRect(panelLeft, panelTop, SETTINGS_PANEL_WIDTH, SETTINGS_PANEL_HEIGHT, SETTINGS_PANEL_CORNER_RADIUS);
+    panel.lineStyle(2, 0xffffff, 0.5);
+    panel.strokeRoundedRect(panelLeft, panelTop, SETTINGS_PANEL_WIDTH, SETTINGS_PANEL_HEIGHT, SETTINGS_PANEL_CORNER_RADIUS);
+
+    // Blocks the panel body from also counting as a backdrop click (Phaser
+    // only dispatches pointerdown to the topmost hit target, so an
+    // interactive no-op here is enough to stop it reaching the backdrop).
+    const panelHitArea = this.add
+      .rectangle(centerX, centerY, SETTINGS_PANEL_WIDTH, SETTINGS_PANEL_HEIGHT, 0x000000, 0)
+      .setInteractive()
+      .setDepth(SETTINGS_PANEL_DEPTH);
+
+    this.settingsObjects = [backdrop, panel, panelHitArea];
+    this.buildLiftGarage({ centerX, y: panelTop + 50 });
+
+    const hint = this.add
+      .text(centerX, panelTop + SETTINGS_PANEL_HEIGHT - 24, "Tap outside to close", {
+        fontSize: "13px",
+        color: "#909090",
+      })
+      .setOrigin(0.5)
+      .setDepth(SETTINGS_CONTENT_DEPTH);
+    this.settingsObjects.push(hint);
+  }
+
+  closeSettings() {
+    this.settingsObjects?.forEach((object) => object.destroy());
+    this.settingsObjects = null;
+  }
+
+  buildLiftGarage({ centerX, y }) {
+    const title = this.add
+      .text(centerX, y, "Lift Garage", { fontSize: "24px", color: "#ffffff" })
+      .setOrigin(0.5)
+      .setDepth(SETTINGS_CONTENT_DEPTH);
+    this.settingsObjects.push(title);
 
     const iconSize = 64;
     const gap = 30;
     const totalWidth = LIFTS.length * iconSize + (LIFTS.length - 1) * gap;
-    const startX = this.gridCenterX - totalWidth / 2 + iconSize / 2;
-    const iconY = y + 50;
+    const startX = centerX - totalWidth / 2 + iconSize / 2;
+    const iconY = y + 60;
 
     this.liftSelectionBorders = {};
 
@@ -63,22 +145,27 @@ export class MainMenuScene extends Phaser.Scene {
       const x = startX + index * (iconSize + gap);
       const selectable = Boolean(lift.platformTextureKey);
 
-      const icon = this.createItemIcon(lift, x, iconY, iconSize, { dimmed: !selectable });
+      const icon = this.createItemIcon(lift, x, iconY, iconSize, { dimmed: !selectable }).setDepth(
+        SETTINGS_CONTENT_DEPTH,
+      );
 
-      const border = this.add.rectangle(x, iconY, iconSize + 10, iconSize + 10);
+      const border = this.add.rectangle(x, iconY, iconSize + 10, iconSize + 10).setDepth(SETTINGS_CONTENT_DEPTH);
       border.setStrokeStyle(3, 0xffffff, 1);
       border.setVisible(selectable && this.registry.get("selectedLiftId") === lift.id);
       this.liftSelectionBorders[lift.id] = border;
 
       const labelText = selectable ? lift.name : `${lift.name}\n(Coming soon)`;
-      this.add
+      const label = this.add
         .text(x, iconY + iconSize / 2 + 16, labelText, {
-          fontSize: "14px",
+          fontSize: "13px",
           color: selectable ? "#c0c0c0" : "#707070",
           align: "center",
           wordWrap: { width: iconSize + gap - 10 },
         })
-        .setOrigin(0.5, 0);
+        .setOrigin(0.5, 0)
+        .setDepth(SETTINGS_CONTENT_DEPTH);
+
+      this.settingsObjects.push(icon, border, label);
 
       if (selectable) {
         icon.setInteractive({ useHandCursor: true });
