@@ -37,4 +37,18 @@ export const HOUSES = [
     color: 0x8b7355,
     enabled: false,
   },
+  {
+    id: "endless-ascent",
+    name: "Endless Ascent",
+    difficulty: "Random",
+    color: 0x2f4470,
+    enabled: true,
+    infinite: true,
+    dirtTypeIds: ["dust", "bird-poop", "hand-prints", "sticker"],
+    liftId: "gondola",
+    wallTextureKey: "brick-town-wall",
+    groundTextureKey: "brick-town-ground",
+    roofTextureKey: "brick-town-roof",
+    skylineTextureKey: "brick-town-skyline",
+  },
 ];
