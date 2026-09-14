@@ -95,6 +95,10 @@ const TOOL_ROW_SELECTED_OUTLINE_WIDTH = 5;
 
 const SKY_COLOR = 0x87ceeb;
 const SKYLINE_PARALLAX = 0.25;
+// The infinite house has no fixed floor count to size the skyline's travel
+// range against, so it gets a generously large fixed cap instead — plenty
+// of climbing before the parallax simply stops advancing further.
+const INFINITE_SKYLINE_PARALLAX_TRAVEL = 4000;
 const SKY_DEPTH = -30;
 const SKYLINE_DEPTH = -20;
 const CLOUD_DEPTH = -10;
@@ -357,6 +361,10 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   skylineParallaxTravel() {
+    if (this.house.infinite) {
+      return INFINITE_SKYLINE_PARALLAX_TRAVEL;
+    }
+
     return (this.house.floors - 1) * SEGMENT_SPACING * SKYLINE_PARALLAX;
   }
 

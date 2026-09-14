@@ -7,4 +7,10 @@ describe("formatFloorLabel", () => {
 
     expect(label).toBe("Floor 3/5");
   });
+
+  it("formats just the current floor when there is no total (the infinite house)", () => {
+    const label = formatFloorLabel(7, null);
+
+    expect(label).toBe("Floor 7");
+  });
 });
