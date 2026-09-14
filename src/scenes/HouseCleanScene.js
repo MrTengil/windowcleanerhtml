@@ -70,8 +70,8 @@ const TAPE_FALL_APART_DISTANCE = 80;
 const TAPE_FALL_ROTATION_MIN = 1.5 * Math.PI;
 const TAPE_FALL_ROTATION_MAX = 2.5 * Math.PI;
 
-const TOOL_ROW_ICON_SIZE = 60;
-const TOOL_ROW_GLYPH_SIZE = 44;
+const TOOL_ROW_ICON_SIZE = 80;
+const TOOL_ROW_GLYPH_SIZE = 60;
 const TOOL_ROW_GAP = 24;
 const TOOL_ROW_Y = CANVAS_HEIGHT - 130;
 const TOOL_ROW_LABEL_OFFSET_Y = TOOL_ROW_ICON_SIZE / 2 + 10;
@@ -406,7 +406,7 @@ export class HouseCleanScene extends Phaser.Scene {
     const glyph = this.createToolIcon(tool, x, y, TOOL_ROW_GLYPH_SIZE).setDepth(HUD_DEPTH + 1);
 
     const label = this.add
-      .text(x, y + TOOL_ROW_LABEL_OFFSET_Y, tool.name, { fontSize: "11px", color: "#ffffff", align: "center" })
+      .text(x, y + TOOL_ROW_LABEL_OFFSET_Y, tool.name, { fontSize: "12px", color: "#ffffff", align: "center" })
       .setOrigin(0.5, 0)
       .setDepth(HUD_DEPTH);
 
