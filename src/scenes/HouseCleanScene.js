@@ -21,6 +21,10 @@ import { formatFloorLabel } from "../ui/HUD.js";
 
 const CANVAS_HEIGHT = 1560;
 
+// How far in the camera is zoomed on the level — tweak this value to test
+// framing, no other change needed.
+const LEVEL_ZOOM = 1.15;
+
 const WINDOW_Y = 800;
 const WINDOW_WIDTH = 420;
 const WINDOW_HEIGHT = 520;
@@ -214,6 +218,7 @@ export class HouseCleanScene extends Phaser.Scene {
   create() {
     this.equippedTool = this.findEquippedTool();
     this.computeLayout();
+    this.cameras.main.setZoom(LEVEL_ZOOM);
 
     this.buildSkyBackground();
     this.buildBuildingWall();
@@ -821,7 +826,7 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
-    const local = this.toWindowLocal(pointer.x, pointer.y);
+    const local = this.toWindowLocal(pointer.worldX, pointer.worldY);
     const target = this.findSprayTargetPosition(local.x, local.y);
 
     this.attachSprayDecal(this.findOrCreateSprayDecal(target.x, target.y));
@@ -840,7 +845,7 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
-    const local = this.toWindowLocal(pointer.x, pointer.y);
+    const local = this.toWindowLocal(pointer.worldX, pointer.worldY);
     const target = this.findSprayTargetPosition(local.x, local.y);
     const nearestDecal = this.findOrCreateSprayDecal(target.x, target.y);
 
@@ -964,7 +969,7 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
-    const local = this.toWindowLocal(pointer.x, pointer.y);
+    const local = this.toWindowLocal(pointer.worldX, pointer.worldY);
     const spot = this.findCleanablePoopSpotNear(local.x, local.y);
 
     if (!spot) {
@@ -996,7 +1001,7 @@ export class HouseCleanScene extends Phaser.Scene {
     }
 
     const pointer = this.input.activePointer;
-    const local = this.toWindowLocal(pointer.x, pointer.y);
+    const local = this.toWindowLocal(pointer.worldX, pointer.worldY);
     const stillHoldingSpot =
       pointer.isDown &&
       this.equippedTool.id === "sponge" &&
@@ -1096,7 +1101,7 @@ export class HouseCleanScene extends Phaser.Scene {
     const visible = this.activeObstruction ? showToolIcon : this.isInsideWindow(pointer) && showToolIcon;
 
     this.toolIcon.setVisible(visible);
-    this.toolIcon.setPosition(pointer.x, pointer.y + TOUCH_EFFECT_OFFSET_Y);
+    this.toolIcon.setPosition(pointer.worldX, pointer.worldY + TOUCH_EFFECT_OFFSET_Y);
   }
 
   handlePointerMove(pointer) {
@@ -1126,8 +1131,11 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
-    const from = this.toWindowLocal(pointer.prevPosition.x, pointer.prevPosition.y);
-    const to = this.toWindowLocal(pointer.x, pointer.y);
+    // Phaser only caches worldX/worldY for the pointer's current position, not
+    // its previous one, so the erase path's start point is converted by hand.
+    const previousWorld = this.cameras.main.getWorldPoint(pointer.prevPosition.x, pointer.prevPosition.y);
+    const from = this.toWindowLocal(previousWorld.x, previousWorld.y);
+    const to = this.toWindowLocal(pointer.worldX, pointer.worldY);
 
     this.eraseAlongPath(from, to);
     this.updateRevealProgress();
@@ -1158,7 +1166,7 @@ export class HouseCleanScene extends Phaser.Scene {
 
       const screwWorldX = this.windowCenterX + screw.image.x;
       const screwWorldY = WINDOW_Y + screw.image.y;
-      const distance = Phaser.Math.Distance.Between(pointer.x, pointer.y, screwWorldX, screwWorldY);
+      const distance = Phaser.Math.Distance.Between(pointer.worldX, pointer.worldY, screwWorldX, screwWorldY);
 
       if (distance > SCREW_HIT_RADIUS) {
         screw.progress.release();
@@ -1167,7 +1175,7 @@ export class HouseCleanScene extends Phaser.Scene {
       }
 
       engagingScrew = true;
-      const angle = Math.atan2(pointer.y - screwWorldY, pointer.x - screwWorldX);
+      const angle = Math.atan2(pointer.worldY - screwWorldY, pointer.worldX - screwWorldX);
 
       screw.progress.trackAngle(angle);
       this.updateScrewVisuals(screw);
@@ -1189,8 +1197,8 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
-    const localX = pointer.x - this.windowCenterX;
-    const localY = pointer.y - WINDOW_Y;
+    const localX = pointer.worldX - this.windowCenterX;
+    const localY = pointer.worldY - WINDOW_Y;
     const tapeHalfHeight = obstruction.rowHeight / 2;
 
     if (Math.abs(localX) > obstruction.tapeWidth / 2) {
@@ -1403,6 +1411,9 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   rotateToolTowardSweep(pointer) {
+    // Direction only, from raw screen-space movement — a uniform camera zoom
+    // scales dx/dy equally, so the angle this feeds into is unaffected and
+    // there's no need to convert to world coordinates here.
     this.sweepSmoother.addSample({
       dx: pointer.x - pointer.prevPosition.x,
       dy: pointer.y - pointer.prevPosition.y,
@@ -1418,7 +1429,8 @@ export class HouseCleanScene extends Phaser.Scene {
 
   isInsideWindow(pointer) {
     return (
-      Math.abs(pointer.x - this.windowCenterX) <= WINDOW_WIDTH / 2 && Math.abs(pointer.y - WINDOW_Y) <= WINDOW_HEIGHT / 2
+      Math.abs(pointer.worldX - this.windowCenterX) <= WINDOW_WIDTH / 2 &&
+      Math.abs(pointer.worldY - WINDOW_Y) <= WINDOW_HEIGHT / 2
     );
   }
 
