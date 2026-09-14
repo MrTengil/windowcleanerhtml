@@ -1,5 +1,4 @@
 import { HOUSES } from "../config/houses.js";
-import { TOOLS } from "../config/tools.js";
 import { LIFTS } from "../config/lifts.js";
 
 const CARD_WIDTH = 300;
@@ -25,12 +24,6 @@ export class MainMenuScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     HOUSES.forEach((house, index) => this.createHouseCard(house, index));
-
-    this.createIconRow({
-      title: "Toolbelt",
-      y: 840,
-      items: TOOLS,
-    });
 
     this.createLiftGarage({ y: 1120 });
   }
@@ -110,32 +103,6 @@ export class MainMenuScene extends Phaser.Scene {
       card.setInteractive({ useHandCursor: true });
       card.on("pointerdown", () => this.scene.start("HouseCleanScene", { houseId: house.id }));
     }
-  }
-
-  createIconRow({ title, y, items }) {
-    this.add
-      .text(this.gridCenterX, y, title, { fontSize: "24px", color: "#ffffff" })
-      .setOrigin(0.5);
-
-    const iconSize = 64;
-    const gap = 30;
-    const totalWidth = items.length * iconSize + (items.length - 1) * gap;
-    const startX = this.gridCenterX - totalWidth / 2 + iconSize / 2;
-    const iconY = y + 50;
-
-    items.forEach((item, index) => {
-      const x = startX + index * (iconSize + gap);
-
-      this.createItemIcon(item, x, iconY, iconSize);
-      this.add
-        .text(x, iconY + iconSize / 2 + 16, item.name, {
-          fontSize: "14px",
-          color: "#c0c0c0",
-          align: "center",
-          wordWrap: { width: iconSize + gap - 10 },
-        })
-        .setOrigin(0.5, 0);
-    });
   }
 
   createItemIcon(item, x, y, size, { dimmed = false } = {}) {
