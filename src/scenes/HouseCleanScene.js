@@ -626,7 +626,9 @@ export class HouseCleanScene extends Phaser.Scene {
 
   createDirtSpotProgress(dirtType) {
     if (dirtType.interactionType === "hold") {
-      return new HoldProgress({ targetDurationMs: dirtType.holdDurationMs });
+      const [minMs, maxMs] = dirtType.holdDurationRange;
+
+      return new HoldProgress({ targetDurationMs: Phaser.Math.Between(minMs, maxMs) });
     }
 
     return new DirtSpot({ hitsToClean: dirtType.hitsToClean });
