@@ -59,6 +59,11 @@ const TAPE_EDGE_NATIVE_HEIGHT = 70;
 const TAPE_FALL_DURATION = 500;
 const TAPE_FALL_DISTANCE = CANVAS_HEIGHT;
 const TAPE_MIN_PIECE_WIDTH = 20;
+// Only enforced when more than one tape obstruction is active on the same
+// floor, to stop a swipe near one tape from also registering against
+// another further away — with a single tape (every existing house) this
+// never applies, so "anywhere above/below" behaves exactly as before.
+const TAPE_ACTIVATION_MARGIN = 100;
 
 const TAPE_FLING_UP_DISTANCE = 50;
 const TAPE_FLING_APART_DISTANCE = 40;
@@ -584,13 +589,9 @@ export class HouseCleanScene extends Phaser.Scene {
     }
 
     const dirtSpots = this.buildDirtSpots(container);
+    const obstructions = this.buildObstructions(container);
 
-    const obstruction =
-      Phaser.Math.Between(0, 1) === 0
-        ? this.buildBoardObstruction(container)
-        : this.buildPoliceTapeObstruction(container);
-
-    const segment = { container, dirtMask, worldY, floor, obstruction, sprayDecals: [], dirtSpots };
+    const segment = { container, dirtMask, worldY, floor, obstructions, sprayDecals: [], dirtSpots };
     this.segments.push(segment);
 
     // Container doesn't auto-sort its children by depth like the Scene's
@@ -606,7 +607,7 @@ export class HouseCleanScene extends Phaser.Scene {
     this.dirtMask = segment.dirtMask;
     this.revealTracker = new RevealTracker({ width: WINDOW_WIDTH, height: WINDOW_HEIGHT, cellSize: REVEAL_CELL_SIZE });
     this.floorComplete = false;
-    this.activeObstruction = segment.obstruction;
+    this.activeObstructions = segment.obstructions;
     this.activeContainer = segment.container;
     this.sprayDecals = segment.sprayDecals;
     this.dirtSpots = segment.dirtSpots;
@@ -670,7 +671,20 @@ export class HouseCleanScene extends Phaser.Scene {
     return new DirtSpot({ hitsToClean: dirtType.hitsToClean });
   }
 
-  buildBoardObstruction(container) {
+  // One random obstruction, dead-centered (bandOffsetY 0) — the shape
+  // every existing house has always had. Overridden per-house (see the
+  // infinite house's procedural content) for floors that need more than
+  // one simultaneous obstruction.
+  buildObstructions(container) {
+    const obstruction =
+      Phaser.Math.Between(0, 1) === 0
+        ? this.buildBoardObstruction(container, 0)
+        : this.buildPoliceTapeObstruction(container, 0);
+
+    return [obstruction];
+  }
+
+  buildBoardObstruction(container, bandOffsetY) {
     // Uniform scale on every axis — a non-uniform stretch fattens anything
     // drawn as a horizontal line in the source art, since a horizontal
     // line's thickness is a vertical measurement.
@@ -706,23 +720,23 @@ export class HouseCleanScene extends Phaser.Scene {
       .setDisplaySize(BOARD_EDGE_WIDTH, rowHeight)
       .setFlipX(true);
 
-    const boardPlank = this.add.container(0, 0, [leftEdge, middle, rightEdge]).setRotation(angle);
+    const boardPlank = this.add.container(0, bandOffsetY, [leftEdge, middle, rightEdge]).setRotation(angle);
     container.add(boardPlank);
 
     const screws = [
       this.buildScrew(
         container,
         flatEdgeLeftX + BOARD_SCREW_NATIVE_OFFSET_X,
-        flatEdgeLeftX * Math.tan(angle),
+        flatEdgeLeftX * Math.tan(angle) + bandOffsetY,
       ),
       this.buildScrew(
         container,
         flatEdgeRightX - BOARD_SCREW_NATIVE_OFFSET_X,
-        flatEdgeRightX * Math.tan(angle),
+        flatEdgeRightX * Math.tan(angle) + bandOffsetY,
       ),
     ];
 
-    return { type: "board", boardPlank, screws, cleared: false };
+    return { type: "board", boardPlank, screws, bandOffsetY, cleared: false };
   }
 
   buildScrew(container, x, y) {
@@ -739,7 +753,7 @@ export class HouseCleanScene extends Phaser.Scene {
     };
   }
 
-  buildPoliceTapeObstruction(container) {
+  buildPoliceTapeObstruction(container, bandOffsetY) {
     const rowScale = TAPE_EDGE_WIDTH / TAPE_EDGE_NATIVE_WIDTH;
     const rowHeight = TAPE_EDGE_NATIVE_HEIGHT * rowScale;
     const tapeWidth = WINDOW_WIDTH + TAPE_OVERHANG * 2;
@@ -756,7 +770,7 @@ export class HouseCleanScene extends Phaser.Scene {
       .setDisplaySize(TAPE_EDGE_WIDTH, rowHeight)
       .setFlipX(true);
 
-    const tapeContainer = this.add.container(0, 0, [leftEdge, middle, rightEdge]);
+    const tapeContainer = this.add.container(0, bandOffsetY, [leftEdge, middle, rightEdge]);
     container.add(tapeContainer);
 
     return {
@@ -768,6 +782,7 @@ export class HouseCleanScene extends Phaser.Scene {
       rowHeight,
       edgeLeftX,
       edgeRightX,
+      bandOffsetY,
       cutting: false,
       cleared: false,
       hasBeenAbove: false,
@@ -819,7 +834,7 @@ export class HouseCleanScene extends Phaser.Scene {
     this.input.on("pointermove", (pointer) => this.handlePointerMove(pointer));
     this.input.on("pointerup", () => {
       this.toolIcon.setVisible(false);
-      this.activeObstruction?.screws?.forEach((screw) => screw.progress.release());
+      this.activeObstructions.forEach((obstruction) => obstruction.screws?.forEach((screw) => screw.progress.release()));
       this.stopSprayHold();
       this.stopPoopHold();
     });
@@ -828,10 +843,12 @@ export class HouseCleanScene extends Phaser.Scene {
   handlePointerDown(pointer) {
     this.sweepSmoother.reset();
 
-    if (this.activeObstruction?.type === "police-tape") {
-      this.activeObstruction.hasBeenAbove = false;
-      this.activeObstruction.hasBeenBelow = false;
-    }
+    this.activeObstructions
+      .filter((obstruction) => obstruction.type === "police-tape")
+      .forEach((obstruction) => {
+        obstruction.hasBeenAbove = false;
+        obstruction.hasBeenBelow = false;
+      });
 
     if (this.equippedTool.id === "spray-bottle") {
       this.startSprayHold(pointer);
@@ -845,7 +862,7 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   canInteractWithWindow(pointer) {
-    return !this.isTransitioning && !this.activeObstruction && this.isInsideWindow(pointer);
+    return !this.isTransitioning && this.activeObstructions.length === 0 && this.isInsideWindow(pointer);
   }
 
   startSprayHold(pointer) {
@@ -1123,7 +1140,8 @@ export class HouseCleanScene extends Phaser.Scene {
     }
 
     const showToolIcon = this.equippedTool.id !== "spray-bottle";
-    const visible = this.activeObstruction ? showToolIcon : this.isInsideWindow(pointer) && showToolIcon;
+    const visible =
+      this.activeObstructions.length > 0 ? showToolIcon : this.isInsideWindow(pointer) && showToolIcon;
 
     this.toolIcon.setVisible(visible);
     this.toolIcon.setPosition(pointer.worldX, pointer.worldY);
@@ -1136,7 +1154,7 @@ export class HouseCleanScene extends Phaser.Scene {
       return;
     }
 
-    if (this.activeObstruction) {
+    if (this.activeObstructions.length > 0) {
       this.handleObstructionPointerMove(pointer);
       return;
     }
@@ -1167,45 +1185,44 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   handleObstructionPointerMove(pointer) {
-    if (this.activeObstruction.type === "board") {
-      this.handleBoardScrewdriverMove(pointer);
-      return;
-    }
+    const boardObstructions = this.activeObstructions.filter((obstruction) => obstruction.type === "board");
+    const tapeObstructions = this.activeObstructions.filter((obstruction) => obstruction.type === "police-tape");
 
-    if (this.activeObstruction.type === "police-tape") {
-      this.handleTapeSwipeMove(pointer);
-    }
+    this.handleBoardScrewdriverMove(pointer, boardObstructions);
+    this.handleTapeSwipeMove(pointer, tapeObstructions);
   }
 
-  handleBoardScrewdriverMove(pointer) {
+  handleBoardScrewdriverMove(pointer, boardObstructions) {
     if (this.equippedTool.id !== "screwdriver") {
       return;
     }
 
     let engagingScrew = false;
 
-    for (const screw of this.activeObstruction.screws) {
-      if (screw.done) {
-        continue;
-      }
+    for (const obstruction of boardObstructions) {
+      for (const screw of obstruction.screws) {
+        if (screw.done) {
+          continue;
+        }
 
-      const screwWorldX = this.windowCenterX + screw.image.x;
-      const screwWorldY = WINDOW_Y + screw.image.y;
-      const distance = Phaser.Math.Distance.Between(pointer.worldX, pointer.worldY, screwWorldX, screwWorldY);
+        const screwWorldX = this.windowCenterX + screw.image.x;
+        const screwWorldY = WINDOW_Y + screw.image.y;
+        const distance = Phaser.Math.Distance.Between(pointer.worldX, pointer.worldY, screwWorldX, screwWorldY);
 
-      if (distance > SCREW_HIT_RADIUS) {
-        screw.progress.release();
-        continue;
-      }
+        if (distance > SCREW_HIT_RADIUS) {
+          screw.progress.release();
+          continue;
+        }
 
-      engagingScrew = true;
-      const angle = Math.atan2(pointer.worldY - screwWorldY, pointer.worldX - screwWorldX);
+        engagingScrew = true;
+        const angle = Math.atan2(pointer.worldY - screwWorldY, pointer.worldX - screwWorldX);
 
-      screw.progress.trackAngle(angle);
-      this.updateScrewVisuals(screw);
+        screw.progress.trackAngle(angle);
+        this.updateScrewVisuals(screw);
 
-      if (screw.progress.isComplete()) {
-        this.completeScrew(screw);
+        if (screw.progress.isComplete()) {
+          this.completeScrew(screw, obstruction);
+        }
       }
     }
 
@@ -1214,30 +1231,43 @@ export class HouseCleanScene extends Phaser.Scene {
     this.toolIcon.setVisible(!engagingScrew);
   }
 
-  handleTapeSwipeMove(pointer) {
-    const obstruction = this.activeObstruction;
-
-    if (this.equippedTool.id !== "scissors" || obstruction.cutting) {
+  handleTapeSwipeMove(pointer, tapeObstructions) {
+    if (this.equippedTool.id !== "scissors") {
       return;
     }
 
-    const localX = pointer.worldX - this.windowCenterX;
-    const localY = pointer.worldY - WINDOW_Y;
-    const tapeHalfHeight = obstruction.rowHeight / 2;
+    // The Y-bound only matters once there's more than one tape to tell
+    // apart — with just one (every existing house), any distance above or
+    // below counts, exactly as before.
+    const requireNearby = tapeObstructions.length > 1;
 
-    if (Math.abs(localX) > obstruction.tapeWidth / 2) {
-      return;
-    }
+    for (const obstruction of tapeObstructions) {
+      if (obstruction.cutting) {
+        continue;
+      }
 
-    if (localY < -tapeHalfHeight) {
-      obstruction.hasBeenAbove = true;
-    } else if (localY > tapeHalfHeight) {
-      obstruction.hasBeenBelow = true;
-    }
+      const localX = pointer.worldX - this.windowCenterX;
+      const localY = pointer.worldY - WINDOW_Y - obstruction.bandOffsetY;
+      const tapeHalfHeight = obstruction.rowHeight / 2;
 
-    if (obstruction.hasBeenAbove && obstruction.hasBeenBelow) {
-      obstruction.cutting = true;
-      this.completeTapeCut(obstruction, localX);
+      if (Math.abs(localX) > obstruction.tapeWidth / 2) {
+        continue;
+      }
+
+      if (requireNearby && Math.abs(localY) > tapeHalfHeight + TAPE_ACTIVATION_MARGIN) {
+        continue;
+      }
+
+      if (localY < -tapeHalfHeight) {
+        obstruction.hasBeenAbove = true;
+      } else if (localY > tapeHalfHeight) {
+        obstruction.hasBeenBelow = true;
+      }
+
+      if (obstruction.hasBeenAbove && obstruction.hasBeenBelow) {
+        obstruction.cutting = true;
+        this.completeTapeCut(obstruction, localX);
+      }
     }
   }
 
@@ -1253,9 +1283,7 @@ export class HouseCleanScene extends Phaser.Scene {
     screw.progressGraphics.strokePath();
   }
 
-  completeScrew(screw) {
-    const obstruction = this.activeObstruction;
-
+  completeScrew(screw, obstruction) {
     screw.done = true;
     screw.progressGraphics.setVisible(false);
     this.animateScrewFall(screw);
@@ -1329,9 +1357,19 @@ export class HouseCleanScene extends Phaser.Scene {
       onComplete: () => {
         obstruction.boardPlank.destroy();
         obstruction.cleared = true;
-        this.activeObstruction = null;
+        this.clearActiveObstruction(obstruction);
       },
     });
+  }
+
+  // Mutates in place rather than reassigning, so this.activeObstructions
+  // stays the same array as the owning segment's own obstructions list.
+  clearActiveObstruction(obstruction) {
+    const index = this.activeObstructions.indexOf(obstruction);
+
+    if (index !== -1) {
+      this.activeObstructions.splice(index, 1);
+    }
   }
 
   completeTapeCut(obstruction, cutX) {
@@ -1375,12 +1413,12 @@ export class HouseCleanScene extends Phaser.Scene {
     // the container (for the fling) spins around the piece's own center
     // instead of the window's center — the same offset-compensation trick
     // pivotBoardPlank uses for the board's hinge.
-    const leftHalf = this.add.container(0, 0, [leftEdge, leftMiddle]);
+    const leftHalf = this.add.container(0, obstruction.bandOffsetY, [leftEdge, leftMiddle]);
     const leftHalfCenterX = (-tapeWidth / 2 + cutX) / 2;
     leftHalf.list.forEach((child) => (child.x -= leftHalfCenterX));
     leftHalf.x = leftHalfCenterX;
 
-    const rightHalf = this.add.container(0, 0, [rightMiddle, rightEdge]);
+    const rightHalf = this.add.container(0, obstruction.bandOffsetY, [rightMiddle, rightEdge]);
     const rightHalfCenterX = (cutX + tapeWidth / 2) / 2;
     rightHalf.list.forEach((child) => (child.x -= rightHalfCenterX));
     rightHalf.x = rightHalfCenterX;
@@ -1429,7 +1467,7 @@ export class HouseCleanScene extends Phaser.Scene {
     }
 
     obstruction.cleared = true;
-    this.activeObstruction = null;
+    this.clearActiveObstruction(obstruction);
   }
 
   rotateToolTowardSweep(pointer) {
@@ -1584,7 +1622,7 @@ export class HouseCleanScene extends Phaser.Scene {
     if (
       !this.floorComplete &&
       this.revealTracker.isFullyRevealed(REVEAL_THRESHOLD) &&
-      !this.activeObstruction &&
+      this.activeObstructions.length === 0 &&
       this.allDirtSpotsCleared()
     ) {
       this.floorComplete = true;
