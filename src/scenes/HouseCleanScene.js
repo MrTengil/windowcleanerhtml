@@ -466,11 +466,15 @@ export class HouseCleanScene extends Phaser.Scene {
   }
 
   debugSkipFloor() {
-    if (this.isTransitioning || this.currentFloor > this.house.floors) {
+    if (this.isTransitioning || this.isPastLastFloor(this.currentFloor)) {
       return;
     }
 
     this.advanceFloor();
+  }
+
+  isPastLastFloor(floor) {
+    return !this.house.infinite && floor > this.house.floors;
   }
 
   buildLift() {
@@ -1673,7 +1677,7 @@ export class HouseCleanScene extends Phaser.Scene {
   advanceFloor() {
     this.currentFloor += 1;
 
-    if (this.currentFloor > this.house.floors) {
+    if (this.isPastLastFloor(this.currentFloor)) {
       this.showLevelComplete();
       return;
     }
@@ -1710,8 +1714,9 @@ export class HouseCleanScene extends Phaser.Scene {
 
   ensureFloorSpawned(floor) {
     const alreadySpawned = this.segments.some((segment) => segment.floor === floor);
+    const withinHouse = this.house.infinite || floor <= this.house.floors;
 
-    if (floor <= this.house.floors && !alreadySpawned) {
+    if (withinHouse && !alreadySpawned) {
       this.spawnFloorSegment(floor);
     }
   }
