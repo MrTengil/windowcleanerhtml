@@ -111,11 +111,9 @@ const REVEAL_CELL_SIZE = 40;
 const REVEAL_THRESHOLD = 0.99;
 const DIRT_FADE_DURATION = 300;
 const SWEEP_TIME_CONSTANT = 100;
-const DRAGGING_TOOL_ICON_SIZE = 100;
-// Touch/cursor effects render this far above the actual pointer position so
-// a thumb resting on the touch point doesn't hide them (the drag tool icon,
-// the bird-poop hold ring, and its bubbles all use this).
-const TOUCH_EFFECT_OFFSET_Y = -90;
+// Bigger than a typical fingertip so it stays visible even centered exactly
+// under the touch point, rather than rendering offset from it.
+const DRAGGING_TOOL_ICON_SIZE = 160;
 
 const SPRAY_STAGE_DURATION = 200;
 const SPRAY_MAX_STAGE = 8;
@@ -644,10 +642,7 @@ export class HouseCleanScene extends Phaser.Scene {
 
       const progressGraphics =
         dirtType.interactionType === "hold"
-          ? this.add
-              .graphics()
-              .setPosition(containerX, containerY + TOUCH_EFFECT_OFFSET_Y)
-              .setVisible(false)
+          ? this.add.graphics().setPosition(containerX, containerY).setVisible(false)
           : null;
 
       if (progressGraphics) {
@@ -1112,10 +1107,7 @@ export class HouseCleanScene extends Phaser.Scene {
     const bubbleSpec = Phaser.Utils.Array.GetRandom(BUBBLES);
     const jitterX = Phaser.Math.Between(-BUBBLE_JITTER, BUBBLE_JITTER);
     const jitterY = Phaser.Math.Between(-BUBBLE_JITTER, BUBBLE_JITTER);
-    const { x: containerX, y: containerY } = this.toContainerLocal(
-      spot.x + jitterX,
-      spot.y + jitterY + TOUCH_EFFECT_OFFSET_Y,
-    );
+    const { x: containerX, y: containerY } = this.toContainerLocal(spot.x + jitterX, spot.y + jitterY);
 
     const bubble = this.add
       .image(containerX, containerY, bubbleSpec.textureKey)
@@ -1141,7 +1133,7 @@ export class HouseCleanScene extends Phaser.Scene {
     const visible = this.activeObstruction ? showToolIcon : this.isInsideWindow(pointer) && showToolIcon;
 
     this.toolIcon.setVisible(visible);
-    this.toolIcon.setPosition(pointer.worldX, pointer.worldY + TOUCH_EFFECT_OFFSET_Y);
+    this.toolIcon.setPosition(pointer.worldX, pointer.worldY);
   }
 
   handlePointerMove(pointer) {
