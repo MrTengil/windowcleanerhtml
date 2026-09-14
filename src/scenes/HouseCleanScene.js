@@ -120,7 +120,7 @@ const SPRAY_DECAL_DISPLAY_SIZE = 170;
 const SPRAY_BOTTLE_EFFECT_WIDTH = 90;
 const SPRAY_BOTTLE_NATIVE_ASPECT = 330 / 220;
 const SPRAY_BOTTLE_EFFECT_RADIUS = 160;
-const SPRAY_BOTTLE_EFFECT_DURATION = 180;
+const SPRAY_BOTTLE_EFFECT_DURATION = 360;
 // The bottle art's own nozzle points up-and-right at roughly this angle when
 // unrotated — used to aim the effect in at the spray target instead of away
 // from it.
@@ -984,6 +984,7 @@ export class HouseCleanScene extends Phaser.Scene {
       targets: bottle,
       alpha: { from: 0, to: 1 },
       duration: SPRAY_BOTTLE_EFFECT_DURATION / 2,
+      ease: "Sine.easeInOut",
       yoyo: true,
       onComplete: () => bottle.destroy(),
     });
